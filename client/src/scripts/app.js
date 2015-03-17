@@ -2,40 +2,61 @@ SC.initialize({
   client_id: "711c21de667ecd3ea4e91721e5a4fae1"
 });
 
-
 var lastSound = null;
 var $lastSpan = null;
 var trackIsPlaying = false;
 
 function play(track, $listElement) {
-  SC.stream(track.uri || track, function (sound) {
-    var $s = $listElement.find('span');
+  var $s = $listElement.find('i');
+  if (!$s.is($lastSpan)) { // same track
+    $s.addClass("icon-spin3 animate-spin");
+    $s.spinning = true;
+  }
 
+  // bind event to remove the loading icon once music is playing
+  var opts = (function(){
+    var e = $s;
+    return {
+      whileplaying: function () {
+        if (!e.spinning)
+          return;
+        console.log("event called");
+        if (this.position < 1) // once actually playing
+          return;
+        console.log("event Finished!");
+        e.removeClass("icon-spin3 animate-spin");
+        e.spinning = false;
+      }
+    };
+  })();
+
+  SC.stream(track.uri || track, opts, function (sound) {
 
     if (lastSound) {
       lastSound.stop();
+      $lastSpan.removeClass("icon-spin3 animate-spin");
     }
 
     if ($lastSpan) {
-      $lastSpan.removeClass("pause-icon");
+      $lastSpan.removeClass("icon-pause");
     }
 
     if ($s.is($lastSpan)) { // same track
       if (trackIsPlaying) {
         lastSound.stop();
-        $s.removeClass("pause-icon");
+        $s.removeClass("icon-pause");
         trackIsPlaying = false;
       } else {
         // TODO fix pause/resume
         lastSound.play();
         trackIsPlaying = true;
-        $s.addClass("pause-icon");
+        $s.addClass("icon-pause");
       }
     } else { // new track
       if ($s) {
         sound.play();
         trackIsPlaying = true;
-        $s.addClass("pause-icon");
+        $s.addClass("icon-pause");
       }
 
       lastSound = sound;
@@ -78,15 +99,20 @@ function addTrackInfo(amount) {
     }
 
     var el = $(
-      '<li class="list-item fadeIn animated" onclick="click">' +
-        '<span class="play-icon title">' + t_title + '</span>' +
+      '<li class="list-item fadeIn animated">' +
+        '<i class="icon-play"></i><span class="title">' + t_title + '</span>' +
       '</li>'
     );
 
-    el.on('click', function () {
-      console.log("click: " + this.trackUri);
-      play(this.track, this);
-    }.bind(el))
+    var ii = el.find('i');
+    (function(){
+      var e = el;
+      ii.on('click', function () {
+        console.log("click: " + e.trackUri);
+        play(e.track, e);
+        return false;
+      })
+    }());
 
     el.trackUri = t.uri;
     el.track = t;
@@ -144,6 +170,7 @@ input.on('input', function () {
 // seupt more button
 $('#more-button').on('click', function() {
   addTrackInfo(2);
+  return false;
 });
 
 var $text = $('#message-text');

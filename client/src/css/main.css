@@ -3,7 +3,7 @@ body {
   background: url("../assets/bg.jpg") center no-repeat;
   background-size: cover;
 
-  font-family: 'Roboto Condensed', sans-serif;
+  font-family: "Roboto Condensed", "Helvetica", "Arial", sans-serif;
 }
 
 .container {
@@ -35,23 +35,58 @@ body {
 
 .footer {
   border-top: solid 1px;
-  margin-top: 50px;
-  padding-top: 20px;
+  margin-top: 35px;
+  padding-top: 0px;
+
+  margin-bottom: 20px;
 }
 
 .footer .links {
+  position: relative;
   width: 100%;
 
   display: inline-block;
-  font-size: 36px;
+  font-size: 24px;
+
+  overflow: hidden;
 }
 
-.footer .links a {
+.footer .links li {
+  display: inline-block;
+}
+
+.footer .links ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  margin-top: 10px;
+
+  position: absolute;
+  display: inline-block;
 }
 
 #sc-logo {
-  float: right;
-  font-size: 52px;
+  display: block;
+  width: 190px;
+  height: 120px;
+
+  background: url("../assets/soundcloud_logo.png") transparent no-repeat;
+  padding: 0;
+  margin: 0;
+
+  margin: 0 0 0 auto;
+}
+
+#notes {
+  font-family: "Helvetica", "Arial", sans-serif;
+  font-style: normal;
+  font-size: 12px;
+
+  color: #ccc;
+}
+
+#tinysong-logo {
 }
 
 .searchbar {
@@ -59,17 +94,20 @@ body {
   margin-top: 10px;
 }
 
+.searchbar * {
+  display: inline;
+}
+
 .searchbar input {
-  direction: inline-block;
   background: url("../assets/search.png") transparent no-repeat center;
-  width: 400px;
-  height: 60px;
+  background-size: contain;
+  width: 402px;
+  height: 53px;
 
   font-size: 24px;
   border: 0;
 
   padding: 4 15 4 15;
-
   color: white;
 }
 
@@ -77,30 +115,29 @@ body {
   outline: 0;
 }
 
-.search-icon {
+#search-icon {
+  font-size: 24px;
   position: absolute;
-  right: 12px;
-  top: 16px;
-  background: url("../assets/button_search.png") transparent no-repeat;
-  background-size: contain;
-  background-position: right center;
-  width: 28px;
-  height: 28px;
+  right: 10px;
+  top: 15px;
+}
+
+#search-icon:hover {
+  color: #eee;
 }
 
 .message {
   text-align: center;
 
   background-color: #bada55;
-  border 2px solid;
   border-radius: 3px;
 
   padding: 15 8 15 8;
 
   margin-top: 25px;
   margin-bottom: 10px;
-  margin-left: 15px;
-  margin-right: 15px;
+  margin-left: 3px;
+  margin-right: 3px;
 }
 
 #message-box {
@@ -128,18 +165,30 @@ body {
 
 .results ul {
   list-style: none;
-  padding: 6 8 6 8;
+  padding: 0;
   margin: 0 auto;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .results ul li {
   border-bottom: solid #333;
   border-width: 1px;
-  margin-top: 5px;
+
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
-.results ul li * {
-  display: inline-block;
+.results ul li span {
+  display: inline; /* DEBUG - was inline-block */
+}
+
+.results ul li span {
+  cursor: text;
+}
+
+.results ul li i {
+  cursor: pointer;
 }
 
 .results ul li:last-child {
@@ -152,6 +201,8 @@ body {
 }
 
 #more-button {
+  padding-top: 8px;
+  font-size: 14px;
   display: inline-block;
   margin: 0 auto;
 }

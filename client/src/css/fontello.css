@@ -50,7 +50,6 @@
   /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
 }
  
-.icon-spin3:before { content: '\e800'; } /* '' */
 .icon-play:before { content: '\e801'; } /* '' */
 .icon-pause:before { content: '\e802'; } /* '' */
 .icon-soundcloud:before { content: '\e803'; } /* '' */
@@ -60,3 +59,4 @@
 .icon-plus:before { content: '\e807'; } /* '' */
 .icon-github:before { content: '\e808'; } /* '' */
 .icon-twitter:before { content: '\e809'; } /* '' */
+.icon-spin3:before { content: '\e800'; } /* '' */
