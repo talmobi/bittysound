@@ -134,27 +134,29 @@ function search(str) {
   }
 
   SC.get("http://api.soundcloud.com/tracks", query, function (tracks) {
-    showMessage("<b>Here are some results.</b>", "ok");
-
     currentTrackIndex = 0;
     lastTracks = tracks;
     $('#more-button').html("More results").removeClass().addClass('icon-plus');
     var track = tracks[0];
     if (tracks.length < 1) {
       console.log("No tracks found!");
+      list.empty();
+      $('#more-button').css({display: "none"});
+      showMessage("<b>Didn't find any songs!</b> Try a new search?", "error");
     } else {
-      console.log(tracks[0]);
-      //play(track);
+      showMessage("<b>Here are some results.</b>", "ok");
 
       // clear list
       list.empty();
 
       addTrackInfo(4);
+      $('#more-button').css({display: "block"});
     }
   }); // SC.get
 }
 
-search("melody circus");
+// default debug search result
+//search("melody circus");
 
 var input = $('.searchbar input');
 var timeout = null;
@@ -162,7 +164,16 @@ input.on('input', function () {
   if (timeout) {
     clearTimeout(timeout);
   }
+
+  if (input.val().length <= 0)
+    return; // do nothing
+
+
   timeout = setTimeout(function() {
+    if (input.val().length < 2) {
+      showMessage("<b>How about</b> we try searching for something real?", 'ok');
+      return;
+    }
     search(input.val());
   }, 400);
 })

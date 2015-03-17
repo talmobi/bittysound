@@ -42,11 +42,12 @@ body {
 }
 
 .footer .links {
+  margin-top: 20px;
   position: relative;
   width: 100%;
 
   display: inline-block;
-  font-size: 24px;
+  font-size: 20px;
 
   overflow: hidden;
 }
@@ -60,7 +61,7 @@ body {
   margin: 0;
   list-style: none;
 
-  margin-top: 10px;
+  margin-top: 22px;
 
   position: absolute;
   display: inline-block;
@@ -68,10 +69,12 @@ body {
 
 #sc-logo {
   display: block;
-  width: 190px;
-  height: 120px;
+  width: 100px;
+  height: 60px;
 
   background: url("../assets/soundcloud_logo.png") transparent no-repeat;
+  background-size: contain;
+
   padding: 0;
   margin: 0;
 
@@ -198,6 +201,7 @@ body {
 
 .results-footer {
   text-align: center;
+  display: none;
 }
 
 #more-button {
