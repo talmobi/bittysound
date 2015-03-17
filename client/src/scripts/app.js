@@ -83,9 +83,7 @@ function addTrackInfo(amount) {
 
   if (currentTrackIndex >= tracks.length) {
     showMessage("<b>Didn't find any more songs!</b> Try a new search?", "error");
-
     $('#more-button').removeClass().html("No more songs found!");
-
     return;
   }
 
@@ -141,7 +139,7 @@ function search(str) {
     if (tracks.length < 1) {
       console.log("No tracks found!");
       list.empty();
-      $('#more-button').css({display: "none"});
+      $('.results-footer').css("display", "none");
       showMessage("<b>Didn't find any songs!</b> Try a new search?", "error");
     } else {
       showMessage("<b>Here are some results.</b>", "ok");
@@ -150,7 +148,7 @@ function search(str) {
       list.empty();
 
       addTrackInfo(4);
-      $('#more-button').css({display: "block"});
+      $('.results-footer').css("display", "block");
     }
   }); // SC.get
 }
@@ -173,7 +171,6 @@ input.on('blur', function () {
 
 var timeout = null;
 input.on('input', function () {
-  console.log("input evt");
 
   if (timeout) {
     clearTimeout(timeout);
