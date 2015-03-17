@@ -158,9 +158,23 @@ function search(str) {
 // default debug search result
 //search("melody circus");
 
+var defaultText = "Search for any song";
 var input = $('.searchbar input');
+
+// setup input watermark
+input.val(defaultText);
+input.on('focus', function () {
+  input.val("");
+});
+input.on('blur', function () {
+  if (input.val().length < 1)
+    input.val(defaultText);
+});
+
 var timeout = null;
 input.on('input', function () {
+  console.log("input evt");
+
   if (timeout) {
     clearTimeout(timeout);
   }
