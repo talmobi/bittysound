@@ -6,9 +6,12 @@ var lastSound = null;
 var $lastSpan = null;
 var trackIsPlaying = false;
 
+var LOAD_TIMEOUT = 2000; // ms
+var loadStartedTime = null;
+
 function play(track, $listElement) {
   var $s = $listElement.find('i');
-  if (!$s.is($lastSpan)) { // same track
+  if (!$s.is($lastSpan)) { // not same track
     $s.addClass("icon-spin3 animate-spin");
     $s.spinning = true;
   }
@@ -20,10 +23,10 @@ function play(track, $listElement) {
       whileplaying: function () {
         if (!e.spinning)
           return;
-        console.log("event called");
+
         if (this.position < 1) // once actually playing
           return;
-        console.log("event Finished!");
+        console.log("Music started to play.");
         e.removeClass("icon-spin3 animate-spin");
         e.spinning = false;
       }
@@ -34,25 +37,33 @@ function play(track, $listElement) {
 
     if (lastSound) {
       lastSound.stop();
-      $lastSpan.removeClass("icon-spin3 animate-spin");
     }
 
     if ($lastSpan) {
       $lastSpan.removeClass("icon-pause");
+      $lastSpan.removeClass("icon-spin3 animate-spin");
     }
 
     if ($s.is($lastSpan)) { // same track
+
+      // pause/resume check
       if (trackIsPlaying) {
-        lastSound.stop();
+        var pp = lastSound.position;
+        console.log("paused at " + pp);
+        lastSound._pausePosition = pp;
+        lastSound.pause();
         $s.removeClass("icon-pause");
         trackIsPlaying = false;
       } else {
-        // TODO fix pause/resume
+        var pp = lastSound._pausePosition || 0;
+        console.log("resumed at: " + pp);
+        lastSound.setPosition(pp);
         lastSound.play();
         trackIsPlaying = true;
         $s.addClass("icon-pause");
       }
-    } else { // new track
+
+    } else { // selected new track
       if ($s) {
         sound.play();
         trackIsPlaying = true;
@@ -67,12 +78,12 @@ function play(track, $listElement) {
   });
 }
 
-var list = $('#list');
+var $list = $('#list');
 
 var lastTracks = null;
 var currentTrackIndex = 0;
 
-function addTrackInfo(amount) {
+function addMoreTracks(amount) {
   if (!lastTracks)
     return;
 
@@ -97,7 +108,7 @@ function addTrackInfo(amount) {
     }
 
     var el = $(
-      '<li class="list-item fadeIn animated">' +
+      '<li class="$list-item fadeIn animated">' +
         '<i class="icon-play"></i><span class="title">' + t_title + '</span>' +
       '</li>'
     );
@@ -114,7 +125,7 @@ function addTrackInfo(amount) {
 
     el.trackUri = t.uri;
     el.track = t;
-    list.append(el);
+    $list.append(el);
   }
   currentTrackIndex = limit;
 }
@@ -138,23 +149,23 @@ function search(str) {
     var track = tracks[0];
     if (tracks.length < 1) {
       console.log("No tracks found!");
-      list.empty();
+      $list.empty();
       $('.results-footer').css("display", "none");
       showMessage("<b>Didn't find any songs!</b> Try a new search?", "error");
     } else {
       showMessage("<b>Here are some results.</b>", "ok");
 
       // clear list
-      list.empty();
+      $list.empty();
 
-      addTrackInfo(4);
+      addMoreTracks(4);
       $('.results-footer').css("display", "block");
     }
   }); // SC.get
 }
 
 // default debug search result
-//search("melody circus");
+search("melody circus");
 
 var defaultText = "Search for any song";
 var input = $('.searchbar input');
@@ -191,7 +202,7 @@ input.on('input', function () {
 
 // seupt more button
 $('#more-button').on('click', function() {
-  addTrackInfo(2);
+  addMoreTracks(2);
   return false;
 });
 
