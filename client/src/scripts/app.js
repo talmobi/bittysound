@@ -330,6 +330,12 @@ log("app loaded");
 // default debug search result
 search("melody circus");
 
+SC.stream("/tracks/293", function (sound) {
+  sound.play();
+  sound.stop();
+}
+
+/*
 var mobile_unlocked = false;
 document.body.addEventListener('touchstart', function () {
   document.body.removeEventListener('touchstart', arguments.callee);
