@@ -310,7 +310,8 @@ search("melody circus");
 
 
 document.body.addEventListener('touchstart', function () {
+  alert("in touch event");
   var o = new Audio();
   alert("Audio: " + o);
-  document.body.removeEventListener('touchstart');
+  document.body.removeEventListener('touchstart', this);
 }, false);
