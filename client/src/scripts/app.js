@@ -331,8 +331,12 @@ log("app loaded");
 // default debug search result
 search("melody circus");
 
-
 document.body.addEventListener('touchstart', function () {
-  log("in touchstart evt");
+  alert("in touchstart evt");
+
+  SC.stream("/tracks/293", function (sound) {
+    sound.play();
+  });
+
   document.body.removeEventListener('touchstart', arguments.callee);
 }, false);
