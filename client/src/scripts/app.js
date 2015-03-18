@@ -12,13 +12,14 @@ function log(str) {
     console.log(str);
 }
 
-var LOAD_TIMEOUT = 4000; // ms
+var LOAD_TIMEOUT = 3000; // ms
 var loadStartedTime = null;
 
 function play(track, $listElement) {
   var $s = $listElement.find('i');
   $s.removeClass("icon-block");
-  if (!$s.is($lastSpan)) { // not same track
+  //if (!$s.is($lastSpan)) { // not same track
+  if (true) { // not same track
     $s.addClass("icon-spin3 animate-spin");
     $s.spinning = true;
   }
@@ -37,6 +38,8 @@ function play(track, $listElement) {
         log("Music started to play.");
         e.removeClass("icon-spin3 animate-spin");
         e.spinning = false;
+        if (this._timeout)
+          clearTimeout(this._timeout);
       },
       onfinish: function () {
         log(" >>> ONFINISH CALLED");
@@ -51,6 +54,8 @@ function play(track, $listElement) {
 
     if (lastSound) {
       lastSound.stop();
+      if (lastSound._timeout)
+        clearTimeout(lastSound._timeout);
     }
 
     if ($lastSpan) {
@@ -89,7 +94,7 @@ function play(track, $listElement) {
           var mySound = sound;
           var $myElement = $listElement.find('i');
           log("setting up retry check timeout");
-          setTimeout(function() {
+          mySound._timeout = setTimeout(function() {
             log("retry check timeout called");
 
             if (mySound.playState && mySound.position < 1 && trackIsPlaying) {
@@ -99,7 +104,7 @@ function play(track, $listElement) {
 
               // set another timeout that tells the user
               // the music is broken if it still doesn't work
-              setTimeout(function(){
+              mySound._timeout = setTimeout(function(){
                 log('  final check called');
                 if (mySound.playState && mySound.position < 1 && trackIsPlaying) {
                   $myElement
@@ -109,7 +114,6 @@ function play(track, $listElement) {
                   //showMessage(str, 'error');
                   showNotice(str, 'error');
                   mySound.stop();
-                  trackIsPlaying = false;
                   log(" !! track seems to be broken, tell user and stop trying");
                   $lastSpan = null;
                 } else {
@@ -117,7 +121,7 @@ function play(track, $listElement) {
                   log("    position: " + mySound.position);
                   log("    trackIsPlaying: " + trackIsPlaying);
                 }
-              }, LOAD_TIMEOUT * 2 + 500); // extend
+              }, LOAD_TIMEOUT * 1.5 + 500); // extend
             } else {
               log("element OK but check failed");
               log("  position is: " + mySound.position);
