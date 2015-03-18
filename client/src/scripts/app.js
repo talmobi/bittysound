@@ -312,5 +312,5 @@ search("melody circus");
 document.body.addEventListener('touchstart', function () {
   var o = new Audio();
   alert("Audio: " + o);
-  document.body.removeEventListener('touchstart);
+  document.body.removeEventListener('touchstart');
 }, false);
