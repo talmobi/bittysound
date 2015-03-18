@@ -33,8 +33,14 @@ function play(track, $listElement) {
         || !lastSound._pausePosition || lastSound._pausePosition < 1) {
       log("Same track but broken track");
 
-      if ($lastIcon.hasClass('icon-spin3'))
+      if ($lastIcon.hasClass('icon-spin3')) {
+        lastSound.stop();
+        $lastIcon.removeClass("icon-pause icon-spin3 animate-spin icon-block");
+        if (lastSound._timeout) {
+          clearTimeout(lastSound._timeout);
+        }
         return;
+      }
     } else {
       log("Same track");
       $lastIcon.addClass("icon-spin3 animate-spin");
