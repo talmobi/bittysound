@@ -26,31 +26,41 @@ function play(track, $listElement) {
     }
 
     if ($lastIcon) {
-      $lastIcon.removeClass("icon-pause");
-      $lastIcon.removeClass("icon-spin3 animate-spin");
+      $lastIcon.removeClass("icon-pause icon-spin3 animate-spin");
     }
   } else { // attempting to play same track
-    log("Same track");
+    if ($lastIcon.hasClass("icon-block")
+        || !lastSound._pausePosition || lastSound._pausePosition < 1) {
+      log("Same track but broken track");
 
-    if (lastSound) {
-      if (lastSound._timeout) {
-        clearTimeout(lastSound._timeout);
+      if ($lastIcon.hasClass('icon-spin3'))
+        return;
+    } else {
+      log("Same track");
+      $lastIcon.addClass("icon-spin3 animate-spin");
+      $lastIcon.spinning = true;
+
+      var cont = false;
+      if (lastSound) {
+        if (lastSound._timeout) {
+          clearTimeout(lastSound._timeout);
+        }
+        if (lastSound.playState) { // if currently playing
+          var pp = lastSound.position;
+          log("paused at " + pp);
+          lastSound._pausePosition = pp;
+          lastSound.stop();
+          $lastIcon.removeClass('icon-pause icon-spin3 animate-spin');
+        } else { // not current playing
+          var pp = lastSound._pausePosition || 0;
+          lastSound.setPosition(pp);
+          lastSound.play();
+          log("resumed at " + pp);
+          $lastIcon.addClass('icon-pause icon-spin3 animate-spin');
+          $lastIcon.spinning = true;
+        }
+        return;
       }
-      if (lastSound.playState) { // if currently playing
-        var pp = lastSound.position;
-        log("paused at " + pp);
-        lastSound._pausePosition = pp;
-        lastSound.stop();
-        $lastIcon.removeClass('icon-pause icon-spin3 animate-spin');
-      } else { // not current playing
-        var pp = lastSound._pausePosition || 0;
-        lastSound.setPosition(pp);
-        lastSound.play();
-        log("resumed at " + pp);
-        $lastIcon.addClass('icon-pause icon-spin3 animate-spin');
-        $lastIcon.spinning = true;
-      }
-      return;
     }
   }
 
