@@ -12,7 +12,7 @@ function log(str) {
     console.log(str);
 }
 
-var LOAD_TIMEOUT = 3000; // ms
+var LOAD_TIMEOUT = 4000; // ms
 var loadStartedTime = null;
 
 function play(track, $listElement) {
@@ -121,7 +121,7 @@ function play(track, $listElement) {
                   log("    position: " + mySound.position);
                   log("    trackIsPlaying: " + trackIsPlaying);
                 }
-              }, LOAD_TIMEOUT * 1.5 + 500); // extend
+              }, LOAD_TIMEOUT * 1 + 500); // extend
             } else {
               log("element OK but check failed");
               log("  position is: " + mySound.position);
@@ -231,6 +231,7 @@ var inputWatermarkText = "Search for any song";
 var input = $('.searchbar input');
 
 // setup input watermark
+var first = true;
 input.val(inputWatermarkText);
 input.on('focus', function () {
   input.val("");
@@ -306,3 +307,7 @@ function showNotice (message, type) {
 log("app loaded");
 // default debug search result
 search("melody circus");
+
+document.body.addEventListener('touchstart', function () {
+  alert('touch start');
+}, false);
