@@ -308,6 +308,9 @@ log("app loaded");
 // default debug search result
 search("melody circus");
 
+
 document.body.addEventListener('touchstart', function () {
-  alert('touch start');
+  var o = new Audio();
+  alert("Audio: " + o);
+  document.body.removeEventListener('touchstart);
 }, false);
