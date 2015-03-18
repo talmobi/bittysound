@@ -13,7 +13,7 @@ function log(str) {
     console.log(str);
 }
 
-var LOAD_TIMEOUT = 2200; // ms
+var LOAD_TIMEOUT = 3000; // ms
 var loadStartedTime = null;
 
 function play(track, $listElement) {
@@ -137,7 +137,7 @@ function play(track, $listElement) {
               log("    playState: " + mySound.playState);
               log("    position: " + mySound.position);
             }
-          }, LOAD_TIMEOUT * 1 + 500); // extend
+          }, LOAD_TIMEOUT * 1.2 + 500); // extend
         } else {
           log("element OK but check failed");
           log("  position is: " + mySound.position);
@@ -331,8 +331,10 @@ log("app loaded");
 search("melody circus");
 
 SC.stream("/tracks/293", function (sound) {
+  sound.setVolume(0);
   sound.play();
   sound.stop();
+  sound.destruct();
 });
 
 /*
