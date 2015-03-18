@@ -350,3 +350,4 @@ document.body.addEventListener('touchstart', function () {
     mobile_unlocked = true;
   });
 }, false);
+*/
