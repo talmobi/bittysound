@@ -12,7 +12,7 @@ function log(str) {
     console.log(str);
 }
 
-var LOAD_TIMEOUT = 2000; // ms
+var LOAD_TIMEOUT = 4000; // ms
 var loadStartedTime = null;
 
 function play(track, $listElement) {
@@ -108,6 +108,8 @@ function play(track, $listElement) {
                   var str = "Oh noes :( that track seems to be <b>broken.</b>";
                   //showMessage(str, 'error');
                   showNotice(str, 'error');
+                  mySound.stop();
+                  trackIsPlaying = false;
                   log(" !! track seems to be broken, tell user and stop trying");
                   $lastSpan = null;
                 } else {
@@ -115,7 +117,7 @@ function play(track, $listElement) {
                   log("    position: " + mySound.position);
                   log("    trackIsPlaying: " + trackIsPlaying);
                 }
-              }, LOAD_TIMEOUT + 1000); // extend
+              }, LOAD_TIMEOUT * 2 + 500); // extend
             } else {
               log("element OK but check failed");
               log("  position is: " + mySound.position);
