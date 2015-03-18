@@ -12,7 +12,7 @@ function log(str) {
     console.log(str);
 }
 
-var LOAD_TIMEOUT = 1500; // ms
+var LOAD_TIMEOUT = 2000; // ms
 var loadStartedTime = null;
 
 function play(track, $listElement) {
@@ -23,7 +23,8 @@ function play(track, $listElement) {
     $s.spinning = true;
   }
 
-  // bind event to remove the loading icon once music is playing
+  // bind events to remove the loading icon once music is playing
+  // and icon for sop when fnished playing
   var opts = (function(){
     var e = $s;
     return {
@@ -36,11 +37,17 @@ function play(track, $listElement) {
         log("Music started to play.");
         e.removeClass("icon-spin3 animate-spin");
         e.spinning = false;
+      },
+      onfinish: function () {
+        log(" >>> ONFINISH CALLED");
+        e.removeClass("icon-pause");
       }
     };
   })();
 
-  SC.stream(track.uri || track, opts, function (sound) {
+  var uri = track.uri || track;
+  SC.stream(uri, opts, function (sound) {
+    window.ss = sound;
 
     if (lastSound) {
       lastSound.stop();
@@ -87,7 +94,6 @@ function play(track, $listElement) {
 
             if (mySound.playState && mySound.position < 1 && trackIsPlaying) {
               // if still not playing - try again
-              mySound.stop();
               mySound.play();
               log(" -- retrying to play track");
 
@@ -96,11 +102,20 @@ function play(track, $listElement) {
               setTimeout(function(){
                 log('  final check called');
                 if (mySound.playState && mySound.position < 1 && trackIsPlaying) {
-                  $myElement.removeClass("icon-spin3 animate-spin").addClass("icon-block");
-                  showMessage("<b>Hmm,</b> that track seems to be broken.", 'error');
+                  $myElement
+                    .removeClass("icon-spin3 animate-spin icon-paused")
+                    .addClass("icon-block");
+                  var str = "Oh noes :( that track seems to be <b>broken.</b>";
+                  //showMessage(str, 'error');
+                  showNotice(str, 'error');
                   log(" !! track seems to be broken, tell user and stop trying");
+                  $lastSpan = null;
+                } else {
+                  log("    playState: " + mySound.playState);
+                  log("    position: " + mySound.position);
+                  log("    trackIsPlaying: " + trackIsPlaying);
                 }
-              }, LOAD_TIMEOUT + 200); // extend
+              }, LOAD_TIMEOUT + 1000); // extend
             } else {
               log("element OK but check failed");
               log("  position is: " + mySound.position);
@@ -121,7 +136,7 @@ var $list = $('#list');
 var lastTracks = null;
 var currentTrackIndex = 0;
 
-function addMoreTracks(amount) {
+function addMoreTracks(amount, animation) {
   if (!lastTracks)
     return;
 
@@ -145,8 +160,9 @@ function addMoreTracks(amount) {
       t_title += "...";
     }
 
+    var ani = animation || 'fadeIn';
     var el = $(
-      '<li class="$list-item fadeIn animated">' +
+      '<li class="$list-item ' + ani + ' animated">' +
         '<i class="icon-play"></i><span class="title">' + t_title + '</span>' +
       '</li>'
     );
@@ -245,15 +261,40 @@ $('#more-button').on('click', function() {
 });
 
 var $text = $('#message-text');
-var $message = $('.message');
+var $message = $('#message-box');
 function showMessage(message, type) {
-  log("showmessage called");
+  log("showMessage called");
   $text.removeClass();
   if (message)
     $text.html(message);
 
   $message.removeClass();
   $message.addClass("message info-ok info-" + type);
+}
+
+var $nText = $('#notice-text');
+var $nMessage = $('#notice-box');
+var nTimeout = null;
+// show temporary notice message
+function showNotice (message, type) {
+  log("showNotice called");
+
+  $nText.removeClass();
+  if (message)
+    $nText.html(message);
+
+  $nMessage.removeClass();
+  $nMessage.addClass("message bounce animated info-ok info-" + type);
+
+  $nMessage.css('display', 'block');
+
+  if (nTimeout)
+    clearTimeout(nTimeout);
+
+  nTimeout = setTimeout(function(){
+    //$nMessage.css('display', 'none');
+    $nMessage.addClass('fadeOut animated');
+  }, LOAD_TIMEOUT * 1.8);
 }
 
 log("app loaded");

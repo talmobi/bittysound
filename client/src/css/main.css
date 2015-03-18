@@ -138,9 +138,17 @@ body {
   padding: 15 8 15 8;
 
   margin-top: 25px;
-  margin-bottom: 10px;
   margin-left: 3px;
   margin-right: 3px;
+
+  width: 378px;
+}
+
+.content {
+}
+
+.message-container {
+  position: relative;
 }
 
 #message-box {
@@ -148,6 +156,21 @@ body {
 }
 
 #message-text {
+  margin: auto auto;
+  text-align: center;
+}
+
+#notice-box {
+  position: absolute;
+  min-height: 19px;
+
+  z-index: 99;
+
+  display: none;
+  margin-top: 0px;
+}
+
+#notice-text {
   margin: auto auto;
   text-align: center;
 }
