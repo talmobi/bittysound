@@ -258,7 +258,7 @@ body {
 }
 
 [class^="icon-"]:hover, [class*=" icon-"]:hover {
-  color: #9AD5F9;
+  color: #6AA5C9;
 }
 
 a:link, a:visited, a:hover, a:active {
@@ -266,5 +266,6 @@ a:link, a:visited, a:hover, a:active {
   text-decoration: none;
 }
 a:hover {
-  color: #9AD5F9;
+  /* color: #9AD5F9; */
+  color: #6AA5C9;
 }
