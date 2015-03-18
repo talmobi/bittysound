@@ -29,17 +29,18 @@ function play(track, $listElement) {
       $lastIcon.removeClass("icon-pause icon-spin3 animate-spin");
     }
   } else { // attempting to play same track
-    if ($lastIcon.hasClass("icon-block")
-        || !lastSound._pausePosition || lastSound._pausePosition < 1) {
-      log("Same track but broken track");
-
-      if ($lastIcon.hasClass('icon-spin3')) {
-        lastSound.stop();
-        $lastIcon.removeClass("icon-pause icon-spin3 animate-spin icon-block");
+    if ($lastIcon.hasClass("icon-block")) {
+      if (lastSound) {
         if (lastSound._timeout) {
           clearTimeout(lastSound._timeout);
         }
-        return;
+        if (lastSound.playState) {
+          $lastIcon.removeClass("icon-spin3 animate-spin");
+          lastSound.stop();
+          return;
+        } else {
+          // do nothing, continue with trying to play the track
+        }
       }
     } else {
       log("Same track");
@@ -71,7 +72,6 @@ function play(track, $listElement) {
   }
 
   var $i = $listElement.find('i');
-  $i.removeClass("icon-block");
   $i.addClass("icon-spin3 animate-spin");
   $i.spinning = true;
 
@@ -86,7 +86,7 @@ function play(track, $listElement) {
         if (this.position < 1) // once actually playing
           return;
         log("Music started to play.");
-        e.removeClass("icon-spin3 animate-spin");
+        e.removeClass("icon-spin3 animate-spin icon-block");
         e.spinning = false;
         if (this._timeout)
           clearTimeout(this._timeout);
@@ -334,9 +334,9 @@ search("melody circus");
 document.body.addEventListener('touchstart', function () {
   alert("in touchstart evt");
 
-  SC.stream("/tracks/293", function (sound) {
-    sound.play();
-  });
+  //SC.stream("/tracks/293", function (sound) {
+  //  sound.play();
+  //});
 
   document.body.removeEventListener('touchstart', arguments.callee);
 }, false);

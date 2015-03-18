@@ -55,13 +55,11 @@
 .icon-stop:before { content: '\e802'; } /* '' */
 .icon-pause:before { content: '\e803'; } /* '' */
 .icon-plus:before { content: '\e804'; } /* '' */
-.icon-spin5:before { content: '\e805'; } /* '' */
 .icon-github-1:before { content: '\e806'; } /* '' */
 .icon-twitter-1:before { content: '\e807'; } /* '' */
 .icon-facebook:before { content: '\e808'; } /* '' */
 .icon-heart:before { content: '\e809'; } /* '' */
 .icon-star:before { content: '\e80a'; } /* '' */
-.icon-spin3:before { content: '\e80b'; } /* '' */
 .icon-block:before { content: '\e80c'; } /* '' */
 .icon-mail-alt:before { content: '\e80d'; } /* '' */
 .icon-error-alt:before { content: '\e80e'; } /* '' */
@@ -70,3 +68,5 @@
 .icon-export:before { content: '\e811'; } /* '' */
 .icon-cancel:before { content: '\e812'; } /* '' */
 .icon-download:before { content: '\e813'; } /* '' */
+.icon-spin5:before { content: '\e805'; } /* '' */
+.icon-spin3:before { content: '\e80b'; } /* '' */
