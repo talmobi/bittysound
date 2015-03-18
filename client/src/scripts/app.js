@@ -333,7 +333,7 @@ search("melody circus");
 SC.stream("/tracks/293", function (sound) {
   sound.play();
   sound.stop();
-}
+});
 
 /*
 var mobile_unlocked = false;
