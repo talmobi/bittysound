@@ -247,7 +247,6 @@ var inputWatermarkText = "Search for any song";
 var input = $('.searchbar input');
 
 // setup input watermark
-var first = true;
 input.val(inputWatermarkText);
 input.on('focus', function () {
   input.val("");
@@ -331,12 +330,17 @@ log("app loaded");
 // default debug search result
 search("melody circus");
 
+var mobile_unlocked = false;
 document.body.addEventListener('touchstart', function () {
-  alert("in touchstart evt");
-
-  //SC.stream("/tracks/293", function (sound) {
-  //  sound.play();
-  //});
-
   document.body.removeEventListener('touchstart', arguments.callee);
+
+  //alert("in touchstart evt");
+  if (mobile_unlocked)
+    return false;
+
+  SC.stream("/tracks/293", function (sound) {
+    sound.play();
+    sound.stop();
+    mobile_unlocked = true;
+  });
 }, false);
