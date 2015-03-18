@@ -12,11 +12,12 @@ function log(str) {
     console.log(str);
 }
 
-var LOAD_TIMEOUT = 2000; // ms
+var LOAD_TIMEOUT = 1500; // ms
 var loadStartedTime = null;
 
 function play(track, $listElement) {
   var $s = $listElement.find('i');
+  $s.removeClass("icon-block");
   if (!$s.is($lastSpan)) { // not same track
     $s.addClass("icon-spin3 animate-spin");
     $s.spinning = true;
@@ -75,17 +76,16 @@ function play(track, $listElement) {
         sound.play();
         trackIsPlaying = true;
         $s.addClass("icon-pause");
-      }
 
-      // retry playing sound if first attempt fails
-      (function(){
-        var mySound = sound;
-        var $myElement = $s;
-        log("setting up retry check timeout");
-        setTimeout(function() {
-          log("retry check timeout called");
-          if ($s.is($myElement)) {
-            if (mySound.position < 1 && trackIsPlaying) {
+        // retry playing sound if first attempt fails
+        (function(){
+          var mySound = sound;
+          var $myElement = $listElement.find('i');
+          log("setting up retry check timeout");
+          setTimeout(function() {
+            log("retry check timeout called");
+
+            if (mySound.playState && mySound.position < 1 && trackIsPlaying) {
               // if still not playing - try again
               mySound.stop();
               mySound.play();
@@ -94,22 +94,21 @@ function play(track, $listElement) {
               // set another timeout that tells the user
               // the music is broken if it still doesn't work
               setTimeout(function(){
-                if (mySound.position < 0 && trackIsPlaying
-                    && $s.is($myElement)) {
-                  $myElement.addClass("icon-stop");
+                log('  final check called');
+                if (mySound.playState && mySound.position < 1 && trackIsPlaying) {
+                  $myElement.removeClass("icon-spin3 animate-spin").addClass("icon-block");
+                  showMessage("<b>Hmm,</b> that track seems to be broken.", 'error');
                   log(" !! track seems to be broken, tell user and stop trying");
                 }
-              }, LOAD_TIMEOUT + 500);
+              }, LOAD_TIMEOUT + 200); // extend
             } else {
               log("element OK but check failed");
               log("  position is: " + mySound.position);
               log("  trackIsPlaying is: " + trackIsPlaying);
             }
-          } else {
-            log(" << NOT SAME ELEMENT >> ");
-          }
-        }, LOAD_TIMEOUT);
-      })();
+          }, LOAD_TIMEOUT);
+        })();
+      }
 
       lastSound = sound;
       $lastSpan = $s;
@@ -174,6 +173,7 @@ var $text = $('#message-text');
 
 function search(str) {
   // set spinning icon to signify loading
+  showMessage(null, 'ok');
   $text.removeClass().html('').addClass('icon-spin3 animate-spin');
 
   var query = {
@@ -204,9 +204,6 @@ function search(str) {
     }
   }); // eof SC.get
 }
-
-// default debug search result
-search("melody circus");
 
 var inputWatermarkText = "Search for any song";
 var input = $('.searchbar input');
@@ -252,10 +249,13 @@ var $message = $('.message');
 function showMessage(message, type) {
   log("showmessage called");
   $text.removeClass();
-  $text.html(message);
+  if (message)
+    $text.html(message);
 
   $message.removeClass();
   $message.addClass("message info-ok info-" + type);
 }
 
 log("app loaded");
+// default debug search result
+search("melody circus");
