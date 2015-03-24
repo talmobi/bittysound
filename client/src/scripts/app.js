@@ -72,7 +72,7 @@ $(function() {
       }
     }
 
-    var $i = $listElement.find('i');
+    var $i = $listElement.find('button');
     $i.addClass("icon-spin3 animate-spin");
     $i.spinning = true;
 
@@ -184,12 +184,12 @@ $(function() {
 
       var ani = animation || 'fadeIn';
       var $el = $(
-        '<li class="$list-item ' + ani + ' animated">' +
-          '<i class="icon-play"></i><span class="title">' + t_title + '</span>' +
+        '<li class="list-item ' + ani + ' animated">' +
+          '<button class="icon-play"></button><span class="title">' + t_title + '</span>' +
         '</li>'
       );
 
-      var ii = $el.find('i');
+      var ii = $el.find('button');
       ii.track = t;
       (function(){
         var e = $el;

@@ -11,6 +11,17 @@ body {
   margin: 0 auto;
 }
 
+button {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  line-height: normal;
+
+  /* set button transparent (like a span) */
+  border: none;
+  background-color: rgba(1,1,1,0);
+}
+
 .header {
   margin-top: 70px;
 }
@@ -174,6 +185,7 @@ body {
   margin: auto auto;
   text-align: center;
 }
+
 
 .info-ok {
   background-color: #dffbe5;
