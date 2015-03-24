@@ -22,6 +22,10 @@ button {
   background-color: rgba(1,1,1,0);
 }
 
+button:focus {
+  outline: none;
+}
+
 .header {
   margin-top: 70px;
 }
