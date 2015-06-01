@@ -3,7 +3,7 @@ $(function() {
     client_id: "711c21de667ecd3ea4e91721e5a4fae1"
   });
 
-  var debug = true;
+  var debug = false;
   var lastSound = null;
   var lastTrack = null;
   var $lastIcon = null;
@@ -21,6 +21,7 @@ $(function() {
     if (lastTrack !== track) {
       if (lastSound) {
         lastSound.stop();
+        lastSound.stopAll();
         if (lastSound._timeout) {
           clearTimeout(lastSound._timeout);
         }
