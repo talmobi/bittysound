@@ -330,7 +330,8 @@ $(function() {
 
   log("app loaded");
   // default debug search result
-  search("melody circus");
+  if (debug)
+    search("melody circus");
 
   // Few mobiles consistently break on the very first track play
   // without this "hack" - not necessarily due explicitly to
