@@ -4,6 +4,8 @@ body {
   background-size: cover;
 
   font-family: "Roboto Condensed", "Helvetica", "Arial", sans-serif;
+  width: 100%;
+  height: 100%;
 }
 
 .container {
@@ -20,6 +22,10 @@ button {
   /* set button transparent (like a span) */
   border: none;
   background-color: rgba(1,1,1,0);
+}
+
+button:focus {
+  outline: none;
 }
 
 .header {
