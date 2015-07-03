@@ -9,6 +9,8 @@ $(function() {
   var $lastIcon = null;
   var trackIsPlaying = false;
 
+  var onSearchLoad = null;
+
   function log(str) {
     if (debug)
       console.log(str);
@@ -103,7 +105,8 @@ $(function() {
     SC.stream(uri, opts, function (sound) {
       window.ss = sound;
 
-      //soundManager.stopAll();
+      if (soundManager)
+        soundManager.stopAll();
       sound.play();
       $i.addClass("icon-pause");
 
@@ -132,7 +135,8 @@ $(function() {
                 var str = "Oh noes :( that track seems to be <b>broken.</b>";
                 //showMessage(str, 'error');
                 showNotice(str, 'error');
-                mySound.stop();
+                //mySound.stop();
+                soundManager.stopAll();
                 log(" !! track seems to be broken, tell user and stop trying");
               } else {
                 log("    playState: " + mySound.playState);
@@ -173,9 +177,10 @@ $(function() {
       return;
     }
 
-    var limit = amount + currentTrackIndex;
+    var limit = (amount + currentTrackIndex);
     for (var i = currentTrackIndex; i < limit; i++) {
       var t = tracks[i];
+      if (!t) continue;
 
       var t_title = t.title.substring(0, 48);
       if (t.title.length > 48) {
@@ -185,11 +190,12 @@ $(function() {
       var ani = animation || 'fadeIn';
       var $el = $(
         '<li class="list-item ' + ani + ' animated">' +
-          '<button class="icon-play"></button><span class="title">' + t_title + '</span>' +
+          '<button id="track'+i+'" class="icon-play"></button><span class="title">' + t_title + '</span>' +
         '</li>'
       );
 
       var ii = $el.find('button');
+      ii.trackNumber = i;
       ii.track = t;
       (function(){
         var e = $el;
@@ -204,10 +210,27 @@ $(function() {
       $list.append($el);
     }
     currentTrackIndex = limit;
+
+    if (typeof onSearchLoad === 'function') {
+      onSearchLoad();
+    };
   }
 
   var defaultLimit = 16;
   var $text = $('#message-text');
+
+  function playTrack(id) {
+    var uri = "/tracks/" + id;
+
+    if (lastTrack) {
+      lastTrack.stopAll();
+    }
+
+    SC.stream(uri, function (sound) {
+      soundManager.stopAll();
+      sound.play();
+    });
+  }
 
   function search(str) {
     // set spinning icon to signify loading
@@ -225,6 +248,9 @@ $(function() {
       lastTracks = tracks;
       $('#more-button').html("More results").removeClass().addClass('icon-plus');
       var track = tracks[0];
+
+      console.log("first track info");
+      console.log(track);
 
       if (tracks.length < 1) {
         log("No tracks found!");
@@ -270,7 +296,7 @@ $(function() {
 
     timeout = setTimeout(function() {
       if (input.val().length < 2) {
-        showMessage("<b>How about</b> we try searching for something real?", 'ok');
+        showMessage("<b>A single</b> character search? Really? :|", 'ok');
         return;
       }
       search(input.val());
@@ -329,7 +355,7 @@ $(function() {
 
   log("app loaded");
   // default debug search result
-  search("melody circus");
+  //search("melody circus");
 
   // Few mobiles consistently break on the very first track play
   // without this "hack" - not necessarily due explicitly to
@@ -357,5 +383,71 @@ $(function() {
       mobile_unlocked = true;
     });
   }, false);
+  */
+
+  // parse query
+  function parseQuery (query) {
+    var obj = {
+      query: query,
+      keys: [],
+      vals: {}
+    };
+
+    query = query.substring(1);
+
+    var pairs = query.split('&');
+    console.log("pairs: " + pairs);
+
+    for (var i = 0; i < pairs.length; i++) {
+      var pair = pairs[i].split('=', 2);
+      var key = pair[0];
+      var val = pair[1];
+      obj.keys.push(key);
+      obj.vals[key] = val;
+    }
+
+    return obj;
+  }
+  var query = parseQuery(window.location.search);
+
+  // check for query terms
+  setTimeout(function () {
+
+    // search
+    if (query.vals.search) {
+      // make a search
+      var q = query.vals.search.replace('+', ' ');
+      console.log("search term: " + q);
+      search(q);
+    }
+
+    // play track / id
+    if (query.vals.track || query.vals.id) {
+      // make a search
+      var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
+      console.log("track/id term: " + q);
+      playTrack(q);
+    }
+
+    // search term play number
+    if (query.vals.search && query.vals.play) {
+      var q = Math.min(0, (parseInt(query.vals.play) - 1));
+      var id = '#track' + q;
+
+      onSearchLoad = function () {
+        console.log("on search load");
+        $(id).click();
+      };
+    }
+
+  }, 50);
+
+
+
+  /*
+  setTimeout(function () {
+    console.log("Play test track by id");
+    playTrack('89006133');
+  }, 3000);
   */
 });
