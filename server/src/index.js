@@ -9,8 +9,8 @@ var port = process.env.port || 50005;
 
 app.set('port', port);
 
-// let nginx serve the client side static files, only serve api
-//app.use('/', express.static(path.join(__dirname, '../client')));
+// replace this with either nginx static file serving or sth
+app.use('/', express.static(path.join(__dirname, '../../client/src')));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));

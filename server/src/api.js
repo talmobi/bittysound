@@ -46,7 +46,12 @@ module.exports = function (app) {
               err: err
             }).end();
           }
-          return res.redirect(url);
+          console.log("sendng file to user");
+          return res.set({
+            'Content-disposition': 'attachment; filename="'+ trackId +'".mp3',
+            'Content-type': 'audio/mpeg3'
+          }).sendFile(__dirname + url);
+
         })
       };
 
@@ -94,13 +99,19 @@ module.exports = function (app) {
   // setup app routes
   app.get('/track/:id', function (req, res) {
 
-    var trackId = req.params.id;
+    var id = req.params.id;
+    var trackId = id;
+
+    console.log("track id: " + trackId);
 
     // check if the track has already been downloaded,
     var url = cache.getUrl( trackId );
     if (url) {
       // and respond with the url
-      return res.redirect(url);
+      return res.set({
+        'Content-Type': 'audio/mpeg',
+        'Content-Disposition': 'filename="' + url + '"'
+      }).sendFile(url);
     } else {
       // if not, then download the track and respond with the url
       Downloader.queue(trackId, res);

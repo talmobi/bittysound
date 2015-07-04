@@ -191,7 +191,7 @@ $(function() {
       }
 
       var _track_id = t.uri.substring(t.uri.lastIndexOf('/')).substring(1);
-      var track_url = 'api.teenysong.com/track/' + _track_id;
+      var track_url = 'http://localhost:50005/track/' + _track_id;
 
       var ani = animation || 'fadeIn';
       // create list item (track)
@@ -204,7 +204,9 @@ $(function() {
           '<div class="right">' +
             '<button class="icon-export"></button>' +
             //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
+            '<a href="' + track_url + '">' +
               '<button type="submit" class="icon-download"></button>' +
+            '</a>' +
             //'</form>' +
           '</div>' +
         '</li>'
@@ -244,6 +246,7 @@ $(function() {
       ii_download.track = t;
       (function(){
         var e = $el;
+        /*
         ii_download.on('click', function () {
           log("click: " + e.track.uri);
           log(e.track);
@@ -251,6 +254,7 @@ $(function() {
 
           return false;
         })
+        */
       }());
 
       $el.track = t;
