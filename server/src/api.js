@@ -36,7 +36,7 @@ module.exports = function (app) {
       var download = function () {
         concurrent_downloads++;
 
-        requestTrack(trackId, function (err, url) {
+        requestTrack(trackId, {}, function (err, data) {
           concurrent_downloads--;
           self.update(); // ready for new downloads
 
@@ -46,11 +46,20 @@ module.exports = function (app) {
               err: err
             }).end();
           }
-          console.log("sendng file to user");
-          return res.set({
-            'Content-disposition': 'attachment; filename="'+ trackId +'".mp3',
-            'Content-type': 'audio/mpeg3'
-          }).sendFile(__dirname + url);
+
+          if (data.file) {
+            console.log("sendng binary data file to user");
+            return res.set({
+              'Content-disposition': 'attachment; filename="'+ trackId +'".mp3',
+              'Content-type': 'audio/mpeg3'
+            }).end(data.file, 'binary');
+          } else {
+            console.log("sendng file to user");
+            return res.set({
+              'Content-disposition': 'attachment; filename="'+ trackId +'".mp3',
+              'Content-type': 'audio/mpeg3'
+            }).sendFile(__dirname + url);
+          }
 
         })
       };
@@ -62,28 +71,37 @@ module.exports = function (app) {
 
 
   // download track by id from soundcloud
-  function requestTrack (trackId, next) {
+  function requestTrack (trackId, opts, next) {
     var uri = uriTemplate.replace('<trackId>', trackId);
     var file = "";
 
     request(uri, function (err, res, body) {
       if (!err && res.statusCode == 200) {
-        console.log("Successfully downloaded track, saving to disk...");
+        console.log("Successfully downloaded track");
 
         // save track to disk
         var data = new Buffer(file, 'binary');
         var fileName = trackId + '.mp3';
         var filePath = dir + fileName;
-        fs.writeFile(filePath, data, function (err) {
-          if (err) {
-            console.log("Error saving file ["+fileName+"]  to disc.");
-            return next(err);
-          } else {
-            console.log("Successfully saved file to disk!");
-            var url = '/songs/' + fileName;
-            return next(null, url);
-          }
-        });
+
+        if (!opts || !opts.saveToDik) {
+          return next(null, {
+            file: data
+          });
+        } else {
+          fs.writeFile(filePath, data, function (err) {
+            if (err) {
+              console.log("Error saving file ["+fileName+"]  to disc.");
+              return next(err);
+            } else {
+              console.log("Successfully saved file to disk!");
+              var url = '/songs/' + fileName;
+              return next(null, {
+                url: url,
+              });
+            }
+          });
+        }
       } else {
         console.log("Error requesting Track: " + err);
         return next(err || "error");
