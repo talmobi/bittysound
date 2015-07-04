@@ -3,11 +3,15 @@ $(function() {
     client_id: "711c21de667ecd3ea4e91721e5a4fae1"
   });
 
+  var host = window.location.protocol + "//" + window.location.host;
+
   var debug = true;
   var lastSound = null;
   var lastTrack = null;
   var $lastIcon = null;
   var trackIsPlaying = false;
+
+  var lastSearch = "";
 
   // triggered on track list change (like after a search)
   var onSearchLoad = null;
@@ -191,7 +195,7 @@ $(function() {
       }
 
       var _track_id = t.uri.substring(t.uri.lastIndexOf('/')).substring(1);
-      var track_url = 'http://localhost:50005/track/' + _track_id;
+      var track_url = host + '/track/' + _track_id;
 
       var ani = animation || 'fadeIn';
       // create list item (track)
@@ -228,13 +232,18 @@ $(function() {
 
       // export/copypaste link
       var ii_export = $(buttons[1]);
-      ii_export.trackNumber = i;
+      ii_export.trackNumber = i + 1;
       ii_export.track = t;
+      ii_export.trackId = _track_id;
       (function(){
         var e = $el;
+        var self = ii_export;
         ii_export.on('click', function () {
           log("click: " + e.track.uri);
           log(e.track);
+
+          //showNotice(host + '/?search='+ lastSearch +'&track=' + self.trackId, 'info');
+          showNotice(host + '/?search='+ lastSearch.replace(' ', '+') +'&play=' + self.trackNumber, 'info');
 
           return false;
         })
@@ -286,6 +295,8 @@ $(function() {
   }
 
   function search(str) {
+    lastSearch = str;
+
     // set spinning icon to signify loading
     showMessage(null, 'ok');
     showNotice(null); // clear the notice
