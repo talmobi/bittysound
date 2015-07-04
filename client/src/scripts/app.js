@@ -9,6 +9,7 @@ $(function() {
   var $lastIcon = null;
   var trackIsPlaying = false;
 
+  // triggered on track list change (like after a search)
   var onSearchLoad = null;
 
   function log(str) {
@@ -23,6 +24,7 @@ $(function() {
     if (lastTrack !== track) {
       if (lastSound) {
         lastSound.stop();
+        soundManager.stopAll();
         if (lastSound._timeout) {
           clearTimeout(lastSound._timeout);
         }
@@ -74,7 +76,7 @@ $(function() {
       }
     }
 
-    var $i = $listElement.find('button');
+    var $i = $($listElement.find('button')[0]);
     $i.addClass("icon-spin3 animate-spin");
     $i.spinning = true;
 
@@ -182,19 +184,35 @@ $(function() {
       var t = tracks[i];
       if (!t) continue;
 
-      var t_title = t.title.substring(0, 48);
-      if (t.title.length > 48) {
+      var _l = 40;
+      var t_title = t.title.substring(0, _l);
+      if (t.title.length > _l) {
         t_title += "...";
       }
 
+      var _track_id = t.uri.substring(t.uri.lastIndexOf('/')).substring(1);
+      var track_url = 'api.teenysong.com/track/' + _track_id;
+
       var ani = animation || 'fadeIn';
+      // create list item (track)
       var $el = $(
         '<li class="list-item ' + ani + ' animated">' +
-          '<button id="track'+i+'" class="icon-play"></button><span class="title">' + t_title + '</span>' +
+          '<button id="track'+i+'" class="icon-play"></button>' +
+          '<span class="title">' +
+            t_title +
+          '</span>' +
+          '<div class="right">' +
+            '<button class="icon-export"></button>' +
+            //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
+              '<button type="submit" class="icon-download"></button>' +
+            //'</form>' +
+          '</div>' +
         '</li>'
       );
 
-      var ii = $el.find('button');
+      var buttons = $el.find('button');
+      // play/pause button
+      var ii = $(buttons[0]);
       ii.trackNumber = i;
       ii.track = t;
       (function(){
@@ -202,6 +220,35 @@ $(function() {
         ii.on('click', function () {
           log("click: " + e.track.uri);
           play(e.track, e);
+          return false;
+        })
+      }());
+
+      // export/copypaste link
+      var ii_export = $(buttons[1]);
+      ii_export.trackNumber = i;
+      ii_export.track = t;
+      (function(){
+        var e = $el;
+        ii_export.on('click', function () {
+          log("click: " + e.track.uri);
+          log(e.track);
+
+          return false;
+        })
+      }());
+
+      // download link
+      var ii_download = $(buttons[2]);
+      ii_download.trackNumber = i;
+      ii_download.track = t;
+      (function(){
+        var e = $el;
+        ii_download.on('click', function () {
+          log("click: " + e.track.uri);
+          log(e.track);
+          window.location.href = "http://" + track_url;
+
           return false;
         })
       }());
@@ -227,6 +274,8 @@ $(function() {
     }
 
     SC.stream(uri, function (sound) {
+      console.log("sound:");
+      console.log(sound);
       soundManager.stopAll();
       sound.play();
     });
@@ -366,82 +415,84 @@ $(function() {
     sound.play();
     sound.stop();
     sound.destruct();
-  });
 
-  /*
-  var mobile_unlocked = false;
-  document.body.addEventListener('touchstart', function () {
-    document.body.removeEventListener('touchstart', arguments.callee);
+
+
+    /*
+       var mobile_unlocked = false;
+       document.body.addEventListener('touchstart', function () {
+       document.body.removeEventListener('touchstart', arguments.callee);
 
     //alert("in touchstart evt");
     if (mobile_unlocked)
-      return false;
+    return false;
 
     SC.stream("/tracks/293", function (sound) {
-      sound.play();
-      sound.stop();
-      mobile_unlocked = true;
+    sound.play();
+    sound.stop();
+    mobile_unlocked = true;
     });
-  }, false);
-  */
+    }, false);
+    */
 
-  // parse query
-  function parseQuery (query) {
-    var obj = {
-      query: query,
-      keys: [],
-      vals: {}
-    };
-
-    query = query.substring(1);
-
-    var pairs = query.split('&');
-    console.log("pairs: " + pairs);
-
-    for (var i = 0; i < pairs.length; i++) {
-      var pair = pairs[i].split('=', 2);
-      var key = pair[0];
-      var val = pair[1];
-      obj.keys.push(key);
-      obj.vals[key] = val;
-    }
-
-    return obj;
-  }
-  var query = parseQuery(window.location.search);
-
-  // check for query terms
-  setTimeout(function () {
-    // search
-    if (query.vals.search) {
-      // make a search
-      var q = query.vals.search.replace('+', ' ');
-      console.log("search term: " + q);
-      search(q);
-    }
-
-    // play track / id
-    if (query.vals.track || query.vals.id) {
-      // make a search
-      var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
-      console.log("track/id term: " + q);
-      playTrack(q);
-    }
-
-    // search term play number
-    if (query.vals.search && query.vals.play) {
-      var q = Math.max(0, (parseInt(query.vals.play) - 1));
-      var id = '#track' + q;
-
-      onSearchLoad = function () {
-        console.log("on search load");
-        $(id).click();
-        onSearchLoad = null;
+    // parse query
+    function parseQuery (query) {
+      var obj = {
+        query: query,
+        keys: [],
+        vals: {}
       };
+
+      query = query.substring(1);
+
+      var pairs = query.split('&');
+      console.log("pairs: " + pairs);
+
+      for (var i = 0; i < pairs.length; i++) {
+        var pair = pairs[i].split('=', 2);
+        var key = pair[0];
+        var val = pair[1];
+        obj.keys.push(key);
+        obj.vals[key] = val;
+      }
+
+      return obj;
     }
+    var query = parseQuery(window.location.search);
 
-  }, 50);
+    // check for query terms
+    setTimeout(function () {
+      // search
+      if (query.vals.search) {
+        // make a search
+        var q = query.vals.search.replace('+', ' ');
+        console.log("search term: " + q);
+        search(q);
+      }
 
+      // play track / id
+      if (query.vals.track || query.vals.id) {
+        // make a search
+        var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
+        console.log("track/id term: " + q);
+        playTrack(q);
+      }
+
+      // search term play number
+      if (query.vals.search && query.vals.play) {
+        var q = Math.max(0, (parseInt(query.vals.play) - 1));
+        var id = '#track' + q;
+
+        onSearchLoad = function () {
+          console.log("on search load");
+          $(id).click();
+          onSearchLoad = null;
+        };
+      }
+
+    }, 25);
+
+  });
 
 
   /*

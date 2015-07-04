@@ -1,0 +1,5 @@
+node_modules/
+songs/
+*.swo
+*.swp
+*.DS_STORE
