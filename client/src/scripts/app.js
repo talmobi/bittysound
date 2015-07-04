@@ -411,38 +411,38 @@ $(function() {
   var query = parseQuery(window.location.search);
 
   // check for query terms
-  $(function () {
-    setTimeout(function () {
+  setTimeout(function () {
+    // search
+    if (query.vals.search) {
+      // make a search
+      var q = query.vals.search.replace('+', ' ');
+      console.log("search term: " + q);
+      search(q);
+    }
 
-      // search
-      if (query.vals.search) {
-        // make a search
-        var q = query.vals.search.replace('+', ' ');
-        console.log("search term: " + q);
-        search(q);
-      }
+    // play track / id
+    if (query.vals.track || query.vals.id) {
+      // make a search
+      var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
+      console.log("track/id term: " + q);
+      playTrack(q);
+    }
 
-      // play track / id
-      if (query.vals.track || query.vals.id) {
-        // make a search
-        var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
-        console.log("track/id term: " + q);
-        playTrack(q);
-      }
+    // search term play number
+    if (query.vals.search && query.vals.play) {
+      var q = Math.max(0, (parseInt(query.vals.play) - 1));
+      var id = '#track' + q;
 
-      // search term play number
-      if (query.vals.search && query.vals.play) {
-        var q = Math.min(0, (parseInt(query.vals.play) - 1));
-        var id = '#track' + q;
+      onSearchLoad = function () {
+        console.log("on search load");
+        $(id).click();
+        onSearchLoad = null;
+      };
+    }
 
-        onSearchLoad = function () {
-          console.log("on search load");
-          $(id).click();
-        };
-      }
+  }, 50);
 
-    }, 50);
-  });
+
 
   /*
   setTimeout(function () {
