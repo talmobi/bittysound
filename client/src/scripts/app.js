@@ -21,6 +21,10 @@ $(function() {
       console.log(str);
   }
 
+  String.prototype.replaceAll = function (find, replace) {
+    return this.replace(new RegExp(find, 'g'), replace);
+  }
+
   var LOAD_TIMEOUT = 4000; // ms
   var loadStartedTime = null;
 
@@ -243,7 +247,7 @@ $(function() {
           log(e.track);
 
           //showNotice(host + '/?search='+ lastSearch +'&track=' + self.trackId, 'info');
-          showNotice(host + '/?search='+ lastSearch.replace(' ', '+') +'&play=' + self.trackNumber, 'info');
+          showNotice(host + '/?search='+ lastSearch.replaceAll(' ', '+') +'&play=' + self.trackNumber, 'info');
 
           return false;
         })
