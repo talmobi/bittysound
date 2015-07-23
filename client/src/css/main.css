@@ -17,6 +17,10 @@ body {
   float: right;
 }
 
+.left {
+  float: left;
+}
+
 button {
   margin: 0;
   padding: 0;
@@ -36,11 +40,27 @@ button:focus {
   margin-top: 70px;
 }
 
+/*
 .header a {
   display: block;
-  background: url("../assets/logo_text.png") transparent no-repeat center;
+  background: url("../assets/star_logo_small.png") transparent no-repeat center;
   background-size: contain;
   height: 44px;
+}
+*/
+
+.logo {
+}
+
+.logo * {
+  display: block;
+  height: 44px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.logo-icon {
+  height: 74px;
 }
 
 .soundcloud-logo {
@@ -123,7 +143,7 @@ button:focus {
 }
 
 .searchbar input {
-  background: url("../assets/search.png") transparent no-repeat center;
+  background: url("../assets/search_backup.png") transparent no-repeat center;
   background-size: contain;
   width: 402px;
   height: 53px;
