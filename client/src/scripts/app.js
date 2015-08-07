@@ -13,6 +13,13 @@ $(function() {
 
   var lastSearch = "";
 
+  var history = window.localStorage.getItem('history') || [];
+  window.history = history;
+
+  // some test history
+  history.push( 336736 );
+  history.push( 6902662 );
+
   // triggered on track list change (like after a search)
   var onSearchLoad = null;
 
@@ -25,7 +32,7 @@ $(function() {
     return this.replace(new RegExp(find, 'g'), replace);
   }
 
-  var LOAD_TIMEOUT = 4000; // ms
+  var LOAD_TIMEOUT = 4500; // ms
   var loadStartedTime = null;
 
   function play(track, $listElement) {
@@ -84,32 +91,36 @@ $(function() {
       }
     }
 
-    var $i = $($listElement.find('button')[0]);
-    $i.addClass("icon-spin3 animate-spin");
-    $i.spinning = true;
+    // add spinning icon and remove it once music
+    // starts plaing
+    var $i = $listElement ? $($listElement.find('button')[0]) : null;
+    if ($i) {
+      $i.addClass("icon-spin3 animate-spin");
+      $i.spinning = true;
 
-    // bind events to remove the loading icon once music is playing
-    // and icon for sop when fnished playing
-    var opts = (function(){
-      var e = $i;
-      return {
-        whileplaying: function () {
-          if (!e.spinning)
-            return;
-          if (this.position < 1) // once actually playing
-            return;
-          log("Music started to play.");
-          e.removeClass("icon-spin3 animate-spin icon-block");
-          e.spinning = false;
-          if (this._timeout)
-            clearTimeout(this._timeout);
-        },
-        onfinish: function () {
-          log(" >>> ONFINISH CALLED");
-          e.removeClass("icon-pause");
-        }
-      };
-    })();
+      // bind events to remove the loading icon once music is playing
+      // and icon for sop when fnished playing
+      var opts = (function(){
+        var e = $i;
+        return {
+          whileplaying: function () {
+            if (!e.spinning)
+              return;
+            if (this.position < 1) // once actually playing
+              return;
+            log("Music started to play.");
+            e.removeClass("icon-spin3 animate-spin icon-block");
+            e.spinning = false;
+            if (this._timeout)
+              clearTimeout(this._timeout);
+          },
+          onfinish: function () {
+            log(" >>> ONFINISH CALLED");
+            e.removeClass("icon-pause");
+          }
+        };
+      })();
+    }
 
     var uri = track.uri || track;
     SC.stream(uri, opts, function (sound) {
@@ -118,7 +129,13 @@ $(function() {
       if (soundManager)
         soundManager.stopAll();
       sound.play();
-      $i.addClass("icon-pause");
+
+      if ($i) {
+        $i.addClass("icon-pause");
+        // save to history
+        history.push(track.id);
+        console.log("track id added to history: " + track.id);
+      }
 
       // retry playing sound if first attempt fails
       (function(){
@@ -139,9 +156,11 @@ $(function() {
             mySound._timeout = setTimeout(function(){
               log('  final check called');
               if (mySound.playState && mySound.position < 1) {
-                $e
-                  .removeClass("icon-spin3 animate-spin icon-paused")
-                  .addClass("icon-block");
+                if ($e) {
+                  $e
+                    .removeClass("icon-spin3 animate-spin icon-paused")
+                    .addClass("icon-block");
+                }
                 var str = "Oh noes :( that track seems to be <b>broken.</b>";
                 //showMessage(str, 'error');
                 showNotice(str, 'error');
@@ -166,6 +185,8 @@ $(function() {
     $lastIcon = $i;
     lastTrack = track;
   }
+
+  window.play = play;
 
   var $list = $('#list');
 
@@ -286,7 +307,7 @@ $(function() {
   function playTrack(id) {
     var uri = "/tracks/" + id;
 
-    if (lastTrack) {
+    if (lastTrack && (typeof lastTrack.stopAll === 'function')) {
       lastTrack.stopAll();
     }
 
@@ -297,6 +318,8 @@ $(function() {
       sound.play();
     });
   }
+
+  window.playTrack = playTrack;
 
   function search(str) {
     lastSearch = str;
@@ -435,26 +458,7 @@ $(function() {
     sound.stop();
     sound.destruct();
 
-
-
-    /*
-       var mobile_unlocked = false;
-       document.body.addEventListener('touchstart', function () {
-       document.body.removeEventListener('touchstart', arguments.callee);
-
-    //alert("in touchstart evt");
-    if (mobile_unlocked)
-    return false;
-
-    SC.stream("/tracks/293", function (sound) {
-    sound.play();
-    sound.stop();
-    mobile_unlocked = true;
-    });
-    }, false);
-    */
-
-    // parse query
+    // parse incoming query
     function parseQuery (query) {
       var obj = {
         query: query,
