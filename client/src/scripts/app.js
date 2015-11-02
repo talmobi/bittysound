@@ -5,12 +5,23 @@ $(function() {
 
   var host = window.location.protocol + "//" + window.location.host;
 
+  var ENV = 'dev';
+
+  if (window.location.host.indexOf('local') == -1) {
+    ENV = 'production';
+  });
+
   var selected_track_url = null;
   var selected_track_id = null;
 
   /* Setup socket.io to listen for live progress on a download
    * */
-  var socket = io();
+  var socket = null;
+  if (ENV == 'dev') {
+    socket = io();
+  } else {
+    socket = io("d.teenysong.com:50005");
+  }
 
   var debug = true;
   var lastSound = null;
@@ -87,18 +98,6 @@ $(function() {
     elProgressBar.style.width = percent + "%";
   };
 
-  // set up events to close modal when pressing ESC or clicking
-  // the modal background
-  document.getElementById('modal-bg').onclick = function () {
-    elModal.style.display = 'none';
-  };
-  window.onkeyup = function (e) {
-    var key = e.keyCode || e.which;
-    if (key == 27) { // esc
-      elModal.style.display = 'none';
-    }
-  }
-
   /* Setup socket.io to listen for live progress on a download
    * */
   socket.on('progress', function (data) {
@@ -111,7 +110,7 @@ $(function() {
     // close the download modal after completion
     setTimeout(function () {
       // close the modal
-      elModal.style.display = 'none';
+      hideModal();
       setProgress(0);
     }, 1000);
   });
@@ -622,7 +621,7 @@ $(function() {
         };
       }
 
-    }, 25);
+    }, 200);
 
   });
 
@@ -633,4 +632,35 @@ $(function() {
     playTrack('89006133');
   }, 3000);
   */
+
+  // set up events to close modal when pressing ESC or clicking
+  // the modal background
+  var elInput = input.get(0);
+
+  document.getElementById('modal-bg').onclick = function () {
+    hideModal();
+  };
+
+  window.onkeyup = function (e) {
+    var key = e.keyCode || e.which;
+    if (key == 27) { // ESC
+      hideModal();
+    }
+  }
+
+  // focus search bar on key press when not already active
+  window.onkeypress = function (e) {
+    if (e.which !== 0 && !elInput.activeElement) {
+      elInput.focus();
+    };
+  };
+
+
+  var _log = console.log;
+  console.log = function (args) {
+    if (ENV != 'dev') {
+      return;
+    };
+    _log(args);
+  };
 });
