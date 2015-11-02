@@ -470,7 +470,7 @@ $(function() {
         // send search stats
         socket.emit('stats', {
           type: "search",
-          query: query
+          message: str
         });
 
         // clear list for new search
