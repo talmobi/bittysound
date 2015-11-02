@@ -9,7 +9,7 @@ $(function() {
 
   if (window.location.host.indexOf('local') == -1) {
     ENV = 'production';
-  });
+  };
 
   var selected_track_url = null;
   var selected_track_id = null;
@@ -185,6 +185,14 @@ $(function() {
         }
       }
     }
+
+    if (track) {
+      socket.emit('stats', {
+        type: "play",
+        trackId: track.id,
+        title: track.title
+      });
+    };
 
     // add spinning icon and remove it once music
     // starts plaing
@@ -459,6 +467,12 @@ $(function() {
       } else {
         showMessage("<b>Here are some results.</b>", "ok");
 
+        // send search stats
+        socket.emit('stats', {
+          type: "search",
+          query: query
+        });
+
         // clear list for new search
         $list.empty();
 
@@ -656,11 +670,9 @@ $(function() {
   };
 
 
-  var _log = console.log;
-  console.log = function (args) {
-    if (ENV != 'dev') {
+  if (ENV != 'dev') {
+    console.log = function (args) {
       return;
     };
-    _log(args);
-  };
+  }
 });
