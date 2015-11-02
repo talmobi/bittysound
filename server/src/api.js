@@ -31,7 +31,21 @@ module.exports = function (app) {
         // download finishes or when queue list changes
       }
     },
-    queue: function (trackId, res) {
+    queue: function (info, res) {
+      /*
+       * info = {req, trackId}
+       *
+       * */
+      var req = info.req;
+      var trackId = info.trackId;
+      var fileName = trackId;
+      try {
+        fileName = req.query.title || trackId;
+        fileName.trim();
+      } catch (err) {
+        fileName = trackId;
+      };
+
       var self = this;
       var download = function () {
         concurrent_downloads++;
@@ -50,13 +64,13 @@ module.exports = function (app) {
           if (data.file) {
             console.log("sendng binary data file to user");
             return res.set({
-              'Content-disposition': 'attachment; filename="'+ trackId +'".mp3',
+              'Content-disposition': 'attachment; filename="'+ fileName +'".mp3',
               'Content-type': 'audio/mpeg3'
             }).end(data.file, 'binary');
           } else {
             console.log("sendng file to user");
             return res.set({
-              'Content-disposition': 'attachment; filename="'+ trackId +'".mp3',
+              'Content-disposition': 'attachment; filename="'+ filename +'".mp3',
               'Content-type': 'audio/mpeg3'
             }).sendFile(__dirname + url);
           }
@@ -81,7 +95,7 @@ module.exports = function (app) {
 
         // save track to disk
         var data = new Buffer(file, 'binary');
-        var fileName = trackId + '.mp3';
+        var fileName = (trackId) + '.mp3';
         var filePath = dir + fileName;
 
         if (!opts || !opts.saveToDik) {
@@ -132,7 +146,10 @@ module.exports = function (app) {
       }).sendFile(url);
     } else {
       // if not, then download the track and respond with the url
-      Downloader.queue(trackId, res);
+      Downloader.queue({
+        req: req,
+        trackId: trackId
+      }, res);
     }
   });
 }

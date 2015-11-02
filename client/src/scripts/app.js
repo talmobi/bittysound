@@ -5,6 +5,8 @@ $(function() {
 
   var host = window.location.protocol + "//" + window.location.host;
 
+  var selected_track_url = null;
+
   var debug = true;
   var lastSound = null;
   var lastTrack = null;
@@ -23,6 +25,62 @@ $(function() {
   // triggered on track list change (like after a search)
   var onSearchLoad = null;
 
+
+  /*
+   * setup modal
+   * */
+
+  var elModal = document.getElementById('modal');
+  var elCancelButton = document.getElementById('cancel-button');
+  var elDownloadButton = document.getElementById('download-button');
+  var elHrefDownload = document.getElementById('href-download');
+  var elSongName = document.getElementById('song-name');
+
+  var pressDelay = 4000;
+  elHrefDownload.pressTime = Date.now();
+  elHrefDownload.onclick = function (e) {
+    console.log("Download Link Clicked!");
+    var now = Date.now();
+    if (now > elHrefDownload.pressTime + pressDelay) {
+      elHrefDownload.pressTime = now;
+      console.log("triggering download");
+      // trigger download
+    } else {
+      // dont trigger the download
+      console.log("download already in progress, please wait");
+      e.preventDefault();
+      return false;
+    }
+  };
+
+  elCancelButton.onclick = function () {
+    console.log("cancel-button clicked");
+    toggleModal();
+  };
+  function toggleModal() {
+    var d = elModal.style.display;
+    elModal.style.display = (d == 'none') ? 'block' : 'none';
+  };
+  function setModalInfo (name, url) {
+    elSongName.innerHTML = name; // modal song name
+    elHrefDownload.href = url; // download button link
+  };
+
+  // set up events to close modal when pressing ESC or clicking
+  // the modal background
+  document.getElementById('modal-bg').onclick = function () {
+    elModal.style.display = 'none';
+  };
+  window.onkeyup = function (e) {
+    var key = e.keyCode || e.which;
+    if (key == 27) { // esc
+      elModal.style.display = 'none';
+    }
+  }
+
+  /*
+   * logging
+   * */
   function log(str) {
     if (debug)
       console.log(str);
@@ -215,12 +273,16 @@ $(function() {
 
       var _l = 40;
       var t_title = t.title.substring(0, _l);
+      var shortTitle = t_title;
       if (t.title.length > _l) {
         t_title += "...";
       }
 
       var _track_id = t.uri.substring(t.uri.lastIndexOf('/')).substring(1);
       var track_url = host + '/track/' + _track_id;
+
+      // add query param 'title' for custom default name
+      track_url += "?title=" + shortTitle;
 
       var ani = animation || 'fadeIn';
       // create list item (track)
@@ -233,9 +295,9 @@ $(function() {
           '<div class="right">' +
             '<button class="icon-export"></button>' +
             //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
-            '<a href="' + track_url + '">' +
+            //'<a href="' + track_url + '">' +
               '<button type="submit" class="icon-download"></button>' +
-            '</a>' +
+            //'</a>' +
             //'</form>' +
           '</div>' +
         '</li>'
@@ -280,15 +342,22 @@ $(function() {
       ii_download.track = t;
       (function(){
         var e = $el;
-        /*
+        var turl = track_url;
+        var st = shortTitle;
         ii_download.on('click', function () {
-          log("click: " + e.track.uri);
+          log("download click: " + e.track.uri);
           log(e.track);
-          window.location.href = "http://" + track_url;
+          //window.location.href = "http://" + track_url;
+          selected_track_url = turl;
+
+          // setup modal info
+          setModalInfo(st, turl);
+
+          // show the modal
+          toggleModal();
 
           return false;
         })
-        */
       }());
 
       $el.track = t;
