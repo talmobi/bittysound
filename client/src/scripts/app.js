@@ -6,6 +6,11 @@ $(function() {
   var host = window.location.protocol + "//" + window.location.host;
 
   var selected_track_url = null;
+  var selected_track_id = null;
+
+  /* Setup socket.io to listen for live progress on a download
+   * */
+  var socket = io();
 
   var debug = true;
   var lastSound = null;
@@ -29,22 +34,30 @@ $(function() {
   /*
    * setup modal
    * */
-
   var elModal = document.getElementById('modal');
   var elCancelButton = document.getElementById('cancel-button');
   var elDownloadButton = document.getElementById('download-button');
   var elHrefDownload = document.getElementById('href-download');
   var elSongName = document.getElementById('song-name');
 
+  var elProgress = document.getElementById('download-progress');
+  var elProgressBar = document.getElementById('download-progress-bar');
+
   var pressDelay = 4000;
   elHrefDownload.pressTime = Date.now();
   elHrefDownload.onclick = function (e) {
     console.log("Download Link Clicked!");
+
     var now = Date.now();
     if (now > elHrefDownload.pressTime + pressDelay) {
       elHrefDownload.pressTime = now;
       console.log("triggering download");
+      setProgress(1);
       // trigger download
+      // socket.io listen for live progress updates on the track download
+      socket.emit('download', {
+        trackId: selected_track_id
+      });
     } else {
       // dont trigger the download
       console.log("download already in progress, please wait");
@@ -55,15 +68,23 @@ $(function() {
 
   elCancelButton.onclick = function () {
     console.log("cancel-button clicked");
-    toggleModal();
+    hideModal();
   };
-  function toggleModal() {
-    var d = elModal.style.display;
-    elModal.style.display = (d == 'none') ? 'block' : 'none';
+  function showModal() {
+    elModal.style.display = 'block';
+  };
+  function hideModal() {
+    elModal.style.display = 'none';
+    setProgress(0);
   };
   function setModalInfo (name, url) {
     elSongName.innerHTML = name; // modal song name
     elHrefDownload.href = url; // download button link
+  };
+
+  function setProgress (percent) {
+    elProgress.style.display = percent <= 0 ? "none" : "block";
+    elProgressBar.style.width = percent + "%";
   };
 
   // set up events to close modal when pressing ESC or clicking
@@ -77,6 +98,23 @@ $(function() {
       elModal.style.display = 'none';
     }
   }
+
+  /* Setup socket.io to listen for live progress on a download
+   * */
+  socket.on('progress', function (data) {
+    var trackId = data.trackId;
+    var percent = data.percent;
+    setProgress(percent);
+  });
+  socket.on('completed', function (data) {
+    setProgress(100);
+    // close the download modal after completion
+    setTimeout(function () {
+      // close the modal
+      elModal.style.display = 'none';
+      setProgress(0);
+    }, 1000);
+  });
 
   /*
    * logging
@@ -343,18 +381,20 @@ $(function() {
       (function(){
         var e = $el;
         var turl = track_url;
+        var tid = _track_id;
         var st = shortTitle;
         ii_download.on('click', function () {
           log("download click: " + e.track.uri);
           log(e.track);
           //window.location.href = "http://" + track_url;
           selected_track_url = turl;
+          selected_track_id = tid;
 
           // setup modal info
           setModalInfo(st, turl);
 
           // show the modal
-          toggleModal();
+          showModal();
 
           return false;
         })

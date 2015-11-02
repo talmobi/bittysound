@@ -1,3 +1,5 @@
+var ps = require('./progress_server');
+
 module.exports = function (app) {
   // request moule auto handles https and follows redirects
   var request = require('request');
@@ -89,6 +91,8 @@ module.exports = function (app) {
     var uri = uriTemplate.replace('<trackId>', trackId);
     var file = "";
 
+    var contentLength = 1024 * 10;
+
     request(uri, function (err, res, body) {
       if (!err && res.statusCode == 200) {
         console.log("Successfully downloaded track");
@@ -123,8 +127,21 @@ module.exports = function (app) {
 
     }).on('data', function (data) {
       file += data.toString('binary');
+      var length = (file.length);
+      var percent = (length / contentLength) * 100;
+      ps.update(trackId, (percent) | 0);
     }).on('end', function () {
+      ps.clear(trackId);
       console.log("filesize: " + file.length / (KB_IN_BYTES) + " MB");
+    }).on('response', function (response) {
+
+      contentLength = (
+          response.headers['content-length'] ||
+          response.headers['Content-Length'] ||
+          response.headers['content-Length'] ||
+          response.headers['Content-length']
+          );
+      console.log("length: " + contentLength);
     });
   }
 

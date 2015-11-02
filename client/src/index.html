@@ -74,8 +74,10 @@
           <span id="song-name">Lavender Town - Steven song</span>
         </div>
         <div id="download-progress">
-          <span class="text"></span>
-          <span class="graph"></span>
+          <span id="download-progress-text" class="text">Processing Bar</span>
+          <div class="meter">
+            <span id="download-progress-bar" style="width: 0%"></span>
+          </div>
         </div>
         <div id="modal-buttons">
           <button id="cancel-button">Cancel</button>
@@ -89,6 +91,7 @@
 
   <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
   <script src="//connect.soundcloud.com/sdk.js"></script>
+  <script src="/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="scripts/app.js"></script>
 </body>
 </html>
