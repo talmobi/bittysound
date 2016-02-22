@@ -21,6 +21,9 @@ function update (trackId, percent) {
   var sockets = tracks[trackId];
   var now = Date.now();
 
+  if (!sockets)
+    return;
+
   // limit the updates
   var lastTime = sockets.lastTime;
   var lastPercent = sockets.lastPercent;

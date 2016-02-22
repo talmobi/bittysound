@@ -1,6 +1,40 @@
-$(function() {
+var test_track = "/tracks/293";
+
+var uri = "https://api.soundcloud.com" + test_track;
+var template_uri = "https://api.soundcloud.com";
+
+var iframeEl = document.getElementById('sc-widget');
+var WIDGET = SC.Widget('sc-widget');
+
+var auto_play = true;
+var __initialized = false;
+var __first = true;
+init();
+
+function onReady () {
+  console.log("onReady called.");
+
+  if (auto_play && __initialized && !__first) {
+    setTimeout(function () {
+      WIDGET.play();
+    }, 100);
+  }
+
+  __first = false;
+};
+
+function onFinish () {
+  console.log("onFinished called.");
+};
+
+WIDGET.bind(SC.Widget.Events.READY, onReady);
+WIDGET.bind(SC.Widget.Events.FINISH, onFinish);
+
+function init () {
+  var client_id = "c904db093e9f1cf88fbb34fbd9624b19";
+
   SC.initialize({
-    client_id: "711c21de667ecd3ea4e91721e5a4fae1"
+    client_id: client_id
   });
 
   var host = window.location.protocol + "//" + window.location.host;
@@ -9,6 +43,27 @@ $(function() {
 
   if (window.location.host.indexOf('local') == -1) {
     ENV = 'production';
+  };
+
+  function widget_play (track) {
+    if (track.indexOf('api.soundcloud') < 0)
+      track = template_uri + track;
+
+    WIDGET.load(track, {
+      buying: false,
+      liking: true,
+      download: false,
+      sharing: false,
+      show_comments: false,
+      show_playcount: false,
+      show_user: true,
+      show_artwork: false,
+      callback: function () {
+        if (auto_play && __initialized) {
+          WIDGET.play();
+        }
+      }
+    });
   };
 
   var selected_track_url = null;
@@ -40,7 +95,6 @@ $(function() {
 
   // triggered on track list change (like after a search)
   var onSearchLoad = null;
-
 
   /*
    * setup modal
@@ -131,58 +185,29 @@ $(function() {
   var loadStartedTime = null;
 
   function play(track, $listElement) {
-    if (lastTrack !== track) {
-      if (lastSound) {
-        lastSound.stop();
-        soundManager.stopAll();
-        if (lastSound._timeout) {
-          clearTimeout(lastSound._timeout);
-        }
+    log("URI: " + track.uri);
+
+    if (lastTrack == track) { // same element as before
+      if ($lastIcon.hasClass('animate-spin')) {
+        $lastIcon.removeClass("icon-pause icon-spin3 animate-spin");
+        WIDGET.pause();
+        return;
       }
 
+      if ($lastIcon.hasClass('icon-pause')) { // sound is playing -> pause it
+        WIDGET.pause();
+        $lastIcon.removeClass("icon-pause icon-spin3 animate-spin");
+        return;
+      } else { // sound was not playing -> play it
+        WIDGET.play();
+        $lastIcon.removeClass("icon-pause icon-spin3 animate-spin");
+        $lastIcon.addClass("icon-pause");
+        return;
+      }
+    } else { // playing completely new track
+      WIDGET.pause();
       if ($lastIcon) {
         $lastIcon.removeClass("icon-pause icon-spin3 animate-spin");
-      }
-    } else { // attempting to play same track
-      if ($lastIcon.hasClass("icon-block")) {
-        if (lastSound) {
-          if (lastSound._timeout) {
-            clearTimeout(lastSound._timeout);
-          }
-          if (lastSound.playState) {
-            $lastIcon.removeClass("icon-spin3 animate-spin");
-            lastSound.stop();
-            return;
-          } else {
-            // do nothing, continue with trying to play the track
-          }
-        }
-      } else {
-        log("Same track");
-        $lastIcon.addClass("icon-spin3 animate-spin");
-        $lastIcon.spinning = true;
-
-        var cont = false;
-        if (lastSound) {
-          if (lastSound._timeout) {
-            clearTimeout(lastSound._timeout);
-          }
-          if (lastSound.playState) { // if currently playing
-            var pp = lastSound.position;
-            log("paused at " + pp);
-            lastSound._pausePosition = pp;
-            lastSound.stop();
-            $lastIcon.removeClass('icon-pause icon-spin3 animate-spin');
-          } else { // not current playing
-            var pp = lastSound._pausePosition || 0;
-            lastSound.setPosition(pp);
-            lastSound.play();
-            log("resumed at " + pp);
-            $lastIcon.addClass('icon-pause icon-spin3 animate-spin');
-            $lastIcon.spinning = true;
-          }
-          return;
-        }
       }
     }
 
@@ -207,15 +232,17 @@ $(function() {
         var e = $i;
         return {
           whileplaying: function () {
-            if (!e.spinning)
-              return;
-            if (this.position < 1) // once actually playing
-              return;
-            log("Music started to play.");
-            e.removeClass("icon-spin3 animate-spin icon-block");
-            e.spinning = false;
-            if (this._timeout)
-              clearTimeout(this._timeout);
+            WIDGET.getPosition(function (position) {
+              if (!e.spinning)
+                return;
+              if (position < 1) // once actually playing
+                return;
+              log("Music started to play.");
+              e.removeClass("icon-spin3 animate-spin icon-block");
+              e.spinning = false;
+              if (this._timeout)
+                clearTimeout(this._timeout);
+            })
           },
           onfinish: function () {
             log(" >>> ONFINISH CALLED");
@@ -226,64 +253,32 @@ $(function() {
     }
 
     var uri = track.uri || track;
-    SC.stream(uri, opts, function (sound) {
-      window.ss = sound;
+    uri = uri.slice(uri.indexOf('/tracks'));
+    log("URI: " + uri);
 
-      if (soundManager)
-        soundManager.stopAll();
-      sound.play();
+    widget_play(uri);
+    window.current = uri;
 
-      if ($i) {
-        $i.addClass("icon-pause");
-        // save to history
-        history.push(track.id);
-        console.log("track id added to history: " + track.id);
+    WIDGET.bind(SC.Widget.Events.FINISH, opts.onfinish)
+    WIDGET.bind(SC.Widget.Events.PLAY_PROGRESS, opts.whileplaying)
+
+    if ($i) {
+      $i.addClass("icon-pause");
+    }
+
+    lastSound = {
+      uri: uri,
+      stop: function () {
+        WIDGET.pause();
+        WIDGET.seekTo(0);
+      },
+      setPosition: function (pos) {
+        WIDGET.seekTo(pos);
+      },
+      play: function () {
+        WIDGET.play();
       }
-
-      // retry playing sound if first attempt fails
-      (function(){
-        var mySound = sound;
-        var $e = $i;
-        log("setting up retry check timeout");
-        mySound._timeout = setTimeout(function() {
-          log("retry check timeout called");
-
-          if (mySound.playState && mySound.position < 1) {
-            // if still not playing - try again
-            mySound.setPosition(0);
-            mySound.play();
-            log(" -- retrying to play track");
-
-            // set another timeout that tells the user
-            // the music is broken if it still doesn't work
-            mySound._timeout = setTimeout(function(){
-              log('  final check called');
-              if (mySound.playState && mySound.position < 1) {
-                if ($e) {
-                  $e
-                    .removeClass("icon-spin3 animate-spin icon-paused")
-                    .addClass("icon-block");
-                }
-                var str = "Oh noes :( that track seems to be <b>broken.</b>";
-                //showMessage(str, 'error');
-                showNotice(str, 'error');
-                //mySound.stop();
-                soundManager.stopAll();
-                log(" !! track seems to be broken, tell user and stop trying");
-              } else {
-                log("    playState: " + mySound.playState);
-                log("    position: " + mySound.position);
-              }
-            }, LOAD_TIMEOUT * 1.2 + 500); // extend
-          } else {
-            log("element OK but check failed");
-            log("  position is: " + mySound.position);
-          }
-        }, LOAD_TIMEOUT);
-      })();
-
-      lastSound = sound;
-    }); // eof SC.stream
+    };
 
     $lastIcon = $i;
     lastTrack = track;
@@ -332,21 +327,21 @@ $(function() {
       var ani = animation || 'fadeIn';
       // create list item (track)
       var $el = $(
-        '<li class="list-item ' + ani + ' animated">' +
+          '<li class="list-item ' + ani + ' animated">' +
           '<button id="track'+i+'" class="icon-play"></button>' +
           '<span class="title">' +
-            t_title +
+          t_title +
           '</span>' +
           '<div class="right">' +
-            '<button class="icon-export"></button>' +
-            //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
-            //'<a href="' + track_url + '">' +
-              '<button type="submit" class="icon-download"></button>' +
-            //'</a>' +
-            //'</form>' +
+          '<button class="icon-export"></button>' +
+          //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
+          //'<a href="' + track_url + '">' +
+          '<button type="submit" class="icon-download"></button>' +
+          //'</a>' +
+          //'</form>' +
           '</div>' +
-        '</li>'
-      );
+          '</li>'
+          );
 
       var buttons = $el.find('button');
       // play/pause button
@@ -424,15 +419,11 @@ $(function() {
     var uri = "/tracks/" + id;
 
     if (lastTrack && (typeof lastTrack.stopAll === 'function')) {
-      lastTrack.stopAll();
+      WIDGET.pause();
+      WIDGET.seekTo(0);
     }
 
-    SC.stream(uri, function (sound) {
-      console.log("sound:");
-      console.log(sound);
-      soundManager.stopAll();
-      sound.play();
-    });
+    widget_play(uri)
   }
 
   window.playTrack = playTrack;
@@ -445,12 +436,12 @@ $(function() {
     showNotice(null); // clear the notice
     $text.removeClass().html('').addClass('icon-spin3 animate-spin');
 
-    var query = {
+    var params = {
       q: str,
       limit: defaultLimit
     }
 
-    SC.get("http://api.soundcloud.com/tracks", query, function (tracks) {
+    SC.get("/tracks", params).then(function (tracks) {
       currentTrackIndex = 0;
       lastTracks = tracks;
       $('#more-button').html("More results").removeClass().addClass('icon-plus');
@@ -573,79 +564,81 @@ $(function() {
   // Few mobiles consistently break on the very first track play
   // without this "hack" - not necessarily due explicitly to
   // required touch event to play sound - a mystery fix
-  var mobileBypassTrackUri = "/tracks/148734207";
-  SC.stream(mobileBypassTrackUri, function (sound) {
-    sound.setVolume(0);
-    sound.play();
-    sound.stop();
-    sound.destruct();
+  /*
+     var mobileBypassTrackUri = "/tracks/148734207";
+     SC.stream(mobileBypassTrackUri).then(function (sound) {
+     sound.setVolume(0);
+     sound.play();
+     sound.stop();
+     sound.destruct();
 
-    // parse incoming query
-    function parseQuery (query) {
-      var obj = {
-        query: query,
-        keys: [],
-        vals: {}
-      };
+  // parse incoming query
+  function parseQuery (query) {
+  var obj = {
+  query: query,
+  keys: [],
+  vals: {}
+  };
 
-      query = query.substring(1);
+  query = query.substring(1);
 
-      var pairs = query.split('&');
-      console.log("pairs: " + pairs);
+  var pairs = query.split('&');
+  console.log("pairs: " + pairs);
 
-      for (var i = 0; i < pairs.length; i++) {
-        var pair = pairs[i].split('=', 2);
-        var key = pair[0];
-        var val = pair[1];
-        obj.keys.push(key);
-        obj.vals[key] = val;
-      }
+  for (var i = 0; i < pairs.length; i++) {
+  var pair = pairs[i].split('=', 2);
+  var key = pair[0];
+  var val = pair[1];
+  obj.keys.push(key);
+  obj.vals[key] = val;
+  }
 
-      return obj;
-    }
-    var query = parseQuery(window.location.search);
+  return obj;
+  }
+  var query = parseQuery(window.location.search);
 
-    // check for query terms
-    setTimeout(function () {
-      // search
-      if (query.vals.search) {
-        // make a search
-        var q = query.vals.search.replace('+', ' ');
-        console.log("search term: " + q);
-        search(q);
-      }
+  // check for query terms
+  setTimeout(function () {
+  // search
+  if (query.vals.search) {
+  // make a search
+  var q = query.vals.search.replace('+', ' ');
+  console.log("search term: " + q);
+  search(q);
+  }
 
-      // play track / id
-      if (query.vals.track || query.vals.id) {
-        // make a search
-        var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
-        console.log("track/id term: " + q);
-        playTrack(q);
-      }
+  // play track / id
+  if (query.vals.track || query.vals.id) {
+  // make a search
+  var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
+  console.log("track/id term: " + q);
+  playTrack(q);
+  }
 
-      // search term play number
-      if (query.vals.search && query.vals.play) {
-        var q = Math.max(0, (parseInt(query.vals.play) - 1));
-        var id = '#track' + q;
+  // search term play number
+  if (query.vals.search && query.vals.play) {
+  var q = Math.max(0, (parseInt(query.vals.play) - 1));
+  var id = '#track' + q;
 
-        onSearchLoad = function () {
-          console.log("on search load");
-          $(id).click();
-          onSearchLoad = null;
-        };
-      }
+  onSearchLoad = function () {
+  console.log("on search load");
+  $(id).click();
+  onSearchLoad = null;
+  };
+  }
 
-    }, 200);
+  }, 200);
 
   });
+  */
 
 
   /*
-  setTimeout(function () {
-    console.log("Play test track by id");
-    playTrack('89006133');
-  }, 3000);
-  */
+     setTimeout(function () {
+     console.log("Play test track by id");
+     playTrack('89006133');
+     }, 3000);
+     */
 
   // set up events to close modal when pressing ESC or clicking
   // the modal background
@@ -675,4 +668,7 @@ $(function() {
       return;
     };
   }
-});
+
+  __initialized = true;
+  console.log("app initialized");
+}

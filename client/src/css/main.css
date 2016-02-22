@@ -501,3 +501,12 @@ a:hover {
     background-position: 50px 50px;
   }
 }
+
+.hide, .hidden {
+  background: pink;
+  position: fixed;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  display: block;
+}
