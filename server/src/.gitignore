@@ -3,3 +3,5 @@ songs/
 *.swo
 *.swp
 *.DS_STORE
+data/
+data.json
