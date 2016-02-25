@@ -41,7 +41,8 @@ function init () {
 
   var ENV = 'dev';
 
-  if (window.location.host.indexOf('local') == -1) {
+  if (window.location.host.indexOf('local') == -1 &&
+      window.location.host.indexOf('192.168') == -1) {
     ENV = 'production';
   };
 
@@ -49,7 +50,9 @@ function init () {
     if (track.indexOf('api.soundcloud') < 0)
       track = template_uri + track;
 
-    WIDGET.load(track, {
+    WIDGET.load(track);
+    /*
+    , {
       buying: false,
       liking: true,
       download: false,
@@ -58,11 +61,27 @@ function init () {
       show_playcount: false,
       show_user: true,
       show_artwork: false,
-      callback: function () {
+        /*
+           callback: function () {
+        // WIDGET CALLBACK
+        socket.emit('stats', {
+        type: "widget callback",
+        track: track,
+        });
         if (auto_play && __initialized) {
-          WIDGET.play();
+        //WIDGET.play();
         }
-      }
+        }
+        });
+        */
+  //});
+
+    WIDGET.play();
+
+    // TOUCH EVENT ENDED
+    socket.emit('stats', {
+      type: "touch event ended",
+      track: track,
     });
   };
 
@@ -73,7 +92,7 @@ function init () {
    * */
   var socket = null;
   if (ENV == 'dev') {
-    socket = io();
+    socket = io(window.location.href);
   } else {
     socket = io("d.teenysong.com:50005");
   }
@@ -184,6 +203,7 @@ function init () {
   var LOAD_TIMEOUT = 4500; // ms
   var loadStartedTime = null;
 
+  // PLAY TRACK, ELEMENT
   function play(track, $listElement) {
     log("URI: " + track.uri);
 
@@ -350,10 +370,11 @@ function init () {
       ii.track = t;
       (function(){
         var e = $el;
-        ii.on('click', function () {
+        ii.on('click', function (evt) {
+          evt.preventDefault();
           log("click: " + e.track.uri);
           play(e.track, e);
-          return false;
+          // CAUGHT
         })
       }());
 
@@ -500,7 +521,7 @@ function init () {
 
     timeout = setTimeout(function() {
       if (input.val().length < 2) {
-        showMessage("<b>A single</b> character search? Really? :|", 'ok');
+        showMessage("<b>Search</b> something more than a single letter please :|", 'ok');
         return;
       }
       search(input.val());
@@ -634,11 +655,13 @@ function init () {
 
 
   /*
-     setTimeout(function () {
-     console.log("Play test track by id");
-     playTrack('89006133');
-     }, 3000);
-     */
+  for (var i = 1; i < 4; i++) {
+    setTimeout(function () {
+      console.log("Play test track by id");
+      playTrack('89006133');
+    }, 3000 + 2000 * i);
+  }
+  */
 
   // set up events to close modal when pressing ESC or clicking
   // the modal background

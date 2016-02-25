@@ -6,7 +6,7 @@ var app = express();
 var httpServer = require('http').Server(app);
 var io = require('socket.io')(httpServer);
 
-var port = process.env.port || 50005;
+var port = process.env.port || 3050;
 
 app.set('port', port);
 
@@ -56,7 +56,8 @@ if (db) {
   // configure sockets
   var sockets = [];
   io.on('connection', function (socket) {
-    console.log(">> a user connected");
+    var address = socket.handshake.address;
+    console.log(">> a user connected ["+address+"]");
     sockets.push(socket);
 
     socket.on('download', function (data) {
@@ -71,8 +72,9 @@ if (db) {
       });
       Stat.save(function (err, doc) {
         if (err) {
-          console.log("error saving to database");
+          return console.log("error saving to database");
         }
+        console.log("saved stat message: " + Stat.type);
       });
     });
 
@@ -81,8 +83,9 @@ if (db) {
       var Stat = new StatMessage(data);
       Stat.save(function (err, doc) {
         if (err) {
-          console.log("error saving to database");
+          return console.log("error saving to database");
         }
+        console.log("saved stat message: " + Stat.type);
       });
     });
 
