@@ -6,13 +6,46 @@ var template_uri = "https://api.soundcloud.com";
 var iframeEl = document.getElementById('sc-widget');
 var WIDGET = SC.Widget('sc-widget');
 
+var widgets = [];
+var WIDGET = {
+  pause: function () {},
+  play: function () {},
+  stop: function () {},
+};
+
 var auto_play = true;
 var __initialized = false;
 var __first = true;
-init();
+
+function widgets_clear () {
+  var divEl = document.getElementById('hidden-area-id');
+  while (divEl.firstChild) {
+    divEl.removeChild(divEl.firstChild);
+  }
+  widgets = [];
+};
+
+function load_widget_track (track) {
+  var divEl = document.getElementById('hidden-area-id');
+  var template_uri = "https://w.soundcloud.com/player/?url=";
+  var src = template_uri + (track.uri || track);
+
+  var iframeEl = document.createElement('iframe');
+  iframeEl.width = "100%";
+  iframeEl.height = "166";
+  iframeEl.scrolling = "no";
+  iframeEl.frameborder = "no";
+  iframeEl.src = src;
+
+  divEl.appendChild(iframeEl);
+
+  widgets.push( SC.Widget(iframeEl) );
+
+  console.log("widget loaded, uri: " + src);
+};
 
 function onReady () {
-  console.log("onReady called.");
+  return console.log("onReady called.");
 
   if (auto_play && __initialized && !__first) {
     setTimeout(function () {
@@ -24,13 +57,16 @@ function onReady () {
 };
 
 function onFinish () {
-  console.log("onFinished called.");
+  return console.log("onFinished called.");
 };
 
-WIDGET.bind(SC.Widget.Events.READY, onReady);
-WIDGET.bind(SC.Widget.Events.FINISH, onFinish);
+init();
+
+//WIDGET.bind(SC.Widget.Events.READY, onReady);
+//WIDGET.bind(SC.Widget.Events.FINISH, onFinish);
 
 function init () {
+  console.log(">>> MY APP INIT CALLED <<<");
   var client_id = "c904db093e9f1cf88fbb34fbd9624b19";
 
   SC.initialize({
@@ -47,42 +83,17 @@ function init () {
   };
 
   function widget_play (track) {
-    if (track.indexOf('api.soundcloud') < 0)
-      track = template_uri + track;
-
-    WIDGET.load(track);
-    /*
-    , {
-      buying: false,
-      liking: true,
-      download: false,
-      sharing: false,
-      show_comments: false,
-      show_playcount: false,
-      show_user: true,
-      show_artwork: false,
-        /*
-           callback: function () {
-        // WIDGET CALLBACK
-        socket.emit('stats', {
-        type: "widget callback",
-        track: track,
-        });
-        if (auto_play && __initialized) {
-        //WIDGET.play();
-        }
-        }
-        });
-        */
-  //});
-
-    WIDGET.play();
-
     // TOUCH EVENT ENDED
     socket.emit('stats', {
-      type: "touch event ended",
+      type: "widget play, index: " + track.index,
       track: track,
     });
+
+    WIDGET = widgets[track.index];
+
+    console.log("> Track Index: " + track.index);
+
+    return widgets[track.index].play();
   };
 
   var selected_track_url = null;
@@ -276,15 +287,15 @@ function init () {
     uri = uri.slice(uri.indexOf('/tracks'));
     log("URI: " + uri);
 
-    widget_play(uri);
+    widget_play(track);
     window.current = uri;
 
-    WIDGET.bind(SC.Widget.Events.FINISH, opts.onfinish)
-    WIDGET.bind(SC.Widget.Events.PLAY_PROGRESS, opts.whileplaying)
+    //WIDGET.bind(SC.Widget.Events.FINISH, opts.onfinish);
+    //WIDGET.bind(SC.Widget.Events.PLAY_PROGRESS, opts.whileplaying);
 
-    if ($i) {
-      $i.addClass("icon-pause");
-    }
+      if ($i) {
+        $i.addClass("icon-pause");
+      }
 
     lastSound = {
       uri: uri,
@@ -320,6 +331,8 @@ function init () {
     log("current: " + currentTrackIndex);
     log("tracks.length: " + tracks.length);
 
+    log("track: " + tracks[0].uri);
+
     if (currentTrackIndex >= tracks.length) {
       showMessage("<b>Didn't find any more songs!</b> Try a new search?", "error");
       $('#more-button').removeClass().html("No more songs found!");
@@ -340,6 +353,9 @@ function init () {
 
       var _track_id = t.uri.substring(t.uri.lastIndexOf('/')).substring(1);
       var track_url = host + '/track/' + _track_id;
+
+      load_widget_track(t.uri);
+      t.index = i;
 
       // add query param 'title' for custom default name
       track_url += "?title=" + shortTitle;
@@ -371,6 +387,7 @@ function init () {
       (function(){
         var e = $el;
         ii.on('click', function (evt) {
+          __last_evt = this;
           evt.preventDefault();
           log("click: " + e.track.uri);
           play(e.track, e);
@@ -449,6 +466,7 @@ function init () {
 
   window.playTrack = playTrack;
 
+  // SEARCH
   function search(str) {
     lastSearch = str;
 
@@ -467,6 +485,10 @@ function init () {
       lastTracks = tracks;
       $('#more-button').html("More results").removeClass().addClass('icon-plus');
       var track = tracks[0];
+
+      for (var i = 0; i < tracks.length; i++) {
+        tracks[i].index = i;
+      }
 
       console.log("first track info");
       console.log(track);
@@ -487,6 +509,7 @@ function init () {
 
         // clear list for new search
         $list.empty();
+        widgets_clear();
 
         // Initial amount of tracks to show after search
         addMoreTracks(4);
@@ -581,87 +604,6 @@ function init () {
   log("app loaded");
   // default debug search result
   //search("melody circus");
-
-  // Few mobiles consistently break on the very first track play
-  // without this "hack" - not necessarily due explicitly to
-  // required touch event to play sound - a mystery fix
-  /*
-     var mobileBypassTrackUri = "/tracks/148734207";
-     SC.stream(mobileBypassTrackUri).then(function (sound) {
-     sound.setVolume(0);
-     sound.play();
-     sound.stop();
-     sound.destruct();
-
-  // parse incoming query
-  function parseQuery (query) {
-  var obj = {
-  query: query,
-  keys: [],
-  vals: {}
-  };
-
-  query = query.substring(1);
-
-  var pairs = query.split('&');
-  console.log("pairs: " + pairs);
-
-  for (var i = 0; i < pairs.length; i++) {
-  var pair = pairs[i].split('=', 2);
-  var key = pair[0];
-  var val = pair[1];
-  obj.keys.push(key);
-  obj.vals[key] = val;
-  }
-
-  return obj;
-  }
-  var query = parseQuery(window.location.search);
-
-  // check for query terms
-  setTimeout(function () {
-  // search
-  if (query.vals.search) {
-  // make a search
-  var q = query.vals.search.replace('+', ' ');
-  console.log("search term: " + q);
-  search(q);
-  }
-
-  // play track / id
-  if (query.vals.track || query.vals.id) {
-  // make a search
-  var q = query.vals.track.replace('+', ' ') || query.vals.id.replace('+', ' ');
-  console.log("track/id term: " + q);
-  playTrack(q);
-  }
-
-  // search term play number
-  if (query.vals.search && query.vals.play) {
-  var q = Math.max(0, (parseInt(query.vals.play) - 1));
-  var id = '#track' + q;
-
-  onSearchLoad = function () {
-  console.log("on search load");
-  $(id).click();
-  onSearchLoad = null;
-  };
-  }
-
-  }, 200);
-
-  });
-  */
-
-
-  /*
-  for (var i = 1; i < 4; i++) {
-    setTimeout(function () {
-      console.log("Play test track by id");
-      playTrack('89006133');
-    }, 3000 + 2000 * i);
-  }
-  */
 
   // set up events to close modal when pressing ESC or clicking
   // the modal background

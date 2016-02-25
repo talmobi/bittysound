@@ -508,5 +508,7 @@ a:hover {
   top: 0;
   width: 1px;
   height: 1px;
+  width: 100px;
+  height: 60px;
   display: block;
 }
