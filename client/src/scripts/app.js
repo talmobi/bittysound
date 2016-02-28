@@ -3,14 +3,17 @@ var test_track = "/tracks/293";
 var uri = "https://api.soundcloud.com" + test_track;
 var template_uri = "https://api.soundcloud.com";
 
-var iframeEl = document.getElementById('sc-widget');
-var WIDGET = SC.Widget('sc-widget');
+//var iframeEl = document.getElementById('sc-widget');
+//var WIDGET = SC.Widget('sc-widget');
 
-var widgets = [];
+var __els = {};
+
+var widgets = {};
+var current_widget = null;
 var WIDGET = {
   pause: function () {},
-  play: function () {},
   stop: function () {},
+  play: function () {}
 };
 
 var auto_play = true;
@@ -18,17 +21,38 @@ var __initialized = false;
 var __first = true;
 
 function widgets_clear () {
+  __els = [];
+
   var divEl = document.getElementById('hidden-area-id');
+
   while (divEl.firstChild) {
-    divEl.removeChild(divEl.firstChild);
+    var el = divEl.firstChild;
+    if (current_widget && el.__id == current_widget.__id)
+      break;
+    divEl.removeChild(el);
   }
-  widgets = [];
+
+  while (divEl.lastChild) {
+    var el = divEl.lastChild;
+    if (current_widget && el.__id == current_widget.__id)
+      break;
+    divEl.removeChild(el);
+  }
+};
+
+function get_track_id (track) {
+  return track.slice( track.lastIndexOf('/') + 1)
 };
 
 function load_widget_track (track) {
+  console.log("LOAD WIDGET TRACK");
+
   var divEl = document.getElementById('hidden-area-id');
   var template_uri = "https://w.soundcloud.com/player/?url=";
   var src = template_uri + (track.uri || track);
+
+  var track_id = get_track_id(track);
+  console.log("track_id: " + track_id);
 
   var iframeEl = document.createElement('iframe');
   iframeEl.width = "100%";
@@ -36,10 +60,24 @@ function load_widget_track (track) {
   iframeEl.scrolling = "no";
   iframeEl.frameborder = "no";
   iframeEl.src = src;
-
   divEl.appendChild(iframeEl);
 
-  widgets.push( SC.Widget(iframeEl) );
+  var w = SC.Widget(iframeEl);
+  widgets[track_id] = w;
+
+  w.bind(SC.Widget.Events.READY, function () {
+    console.log("widget onReady called");
+    var icon = __els[track_id];
+    icon.removeClass("icon-pause icon-spin3 animate-spin");
+    icon.addClass("icon-play");
+  });
+
+  w.bind(SC.Widget.Events.FINISH, function () {
+    console.log("widget onFinish called");
+  });
+
+  iframeEl.__id = track_id;
+  w.__id = track_id;
 
   console.log("widget loaded, uri: " + src);
 };
@@ -65,6 +103,9 @@ init();
 //WIDGET.bind(SC.Widget.Events.READY, onReady);
 //WIDGET.bind(SC.Widget.Events.FINISH, onFinish);
 
+function attachEvents (widget) {
+};
+
 function init () {
   console.log(">>> MY APP INIT CALLED <<<");
   var client_id = "c904db093e9f1cf88fbb34fbd9624b19";
@@ -83,17 +124,19 @@ function init () {
   };
 
   function widget_play (track) {
+    var track_id = get_track_id(track.uri);
+
     // TOUCH EVENT ENDED
     socket.emit('stats', {
-      type: "widget play, index: " + track.index,
+      type: "widget play, index: " + track.index + ", track: " + track_id,
       track: track,
     });
 
-    WIDGET = widgets[track.index];
+    WIDGET = widgets[track_id];
 
     console.log("> Track Index: " + track.index);
 
-    return widgets[track.index].play();
+    return WIDGET.play();
   };
 
   var selected_track_url = null;
@@ -290,6 +333,22 @@ function init () {
     widget_play(track);
     window.current = uri;
 
+    var __e = $i;
+
+    var w = WIDGET;
+    w.bind(SC.Widget.Events.PLAY_PROGRESS, function () {
+      console.log("widget play_progress called");
+      __e.removeClass("icon-spin3 animate-spin icon-block");
+      __e.spinning = false;
+      w.unbind(SC.Widget.Events.PLAY_PROGRESS);
+    });
+
+    current_widget = WIDGET;
+
+    //var track_id = get_track_id(track);
+    //e.removeClass("icon-spin3 animate-spin icon-block");
+    //e.spinning = false;
+
     //WIDGET.bind(SC.Widget.Events.FINISH, opts.onfinish);
     //WIDGET.bind(SC.Widget.Events.PLAY_PROGRESS, opts.whileplaying);
 
@@ -363,25 +422,26 @@ function init () {
       var ani = animation || 'fadeIn';
       // create list item (track)
       var $el = $(
-          '<li class="list-item ' + ani + ' animated">' +
+        '<li class="list-item ' + ani + ' animated">' +
           '<button id="track'+i+'" class="icon-play"></button>' +
           '<span class="title">' +
-          t_title +
+            t_title +
           '</span>' +
           '<div class="right">' +
-          '<button class="icon-export"></button>' +
-          //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
-          //'<a href="' + track_url + '">' +
-          '<button type="submit" class="icon-download"></button>' +
-          //'</a>' +
-          //'</form>' +
+            '<button class="icon-export"></button>' +
+            //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
+            //'<a href="' + track_url + '">' +
+            '<button type="submit" class="icon-download"></button>' +
+            //'</a>' +
+            //'</form>' +
           '</div>' +
-          '</li>'
-          );
+        '</li>'
+      );
 
       var buttons = $el.find('button');
       // play/pause button
       var ii = $(buttons[0]);
+      ii.addClass("icon-spin3 animate-spin");
       ii.trackNumber = i;
       ii.track = t;
       (function(){
@@ -442,6 +502,8 @@ function init () {
 
       $el.track = t;
       $list.append($el);
+
+      __els[_track_id] = ii;
     }
     currentTrackIndex = limit;
 
