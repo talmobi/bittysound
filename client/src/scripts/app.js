@@ -60,6 +60,11 @@ function load_widget_track (track) {
   iframeEl.scrolling = "no";
   iframeEl.frameborder = "no";
   iframeEl.src = src;
+  iframeEl.show_artwork = false;
+  iframeEl.show_comments = false;
+  iframeEl.show_playcount = false;
+  iframeEl.show_user = false;
+  iframeEl.show_track = false;
   divEl.appendChild(iframeEl);
 
   var w = SC.Widget(iframeEl);
