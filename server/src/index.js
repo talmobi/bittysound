@@ -56,7 +56,7 @@ if (db) {
   // configure sockets
   var sockets = [];
   io.on('connection', function (socket) {
-    var address = socket.handshake.address;
+    var address = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
     console.log(">> a user connected ["+address+"]");
     sockets.push(socket);
 
