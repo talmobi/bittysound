@@ -49,7 +49,7 @@ function load_widget_track (track) {
 
   var divEl = document.getElementById('hidden-area-id');
   var template_uri = "https://w.soundcloud.com/player/?url=";
-  var src = template_uri + (track.uri || track);
+  var src = template_uri + (track.uri || track);
 
   var track_id = get_track_id(track);
   console.log("track_id: " + track_id);
