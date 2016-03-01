@@ -2,6 +2,8 @@ var path = require('path');
 var express = require('express');
 var bodyParser = require('body-parser');
 
+var extend = require('extend');
+
 var app = express();
 var httpServer = require('http').Server(app);
 var io = require('socket.io')(httpServer);
@@ -26,14 +28,12 @@ function genSimpleId () {
 };
 
 var StatMessage = function (data) {
-  var obj = {};
-  Object.assign(obj, data);
+  var obj = extend({}, data);
   obj._id = genSimpleId();
   obj.created_at = Date.now();
 
+  // save self
   obj.save = function (done) {
-
-
     db.save(obj, function (err, id) {
       done(err, obj);
     });

@@ -153,7 +153,8 @@ function init () {
   if (ENV == 'dev') {
     socket = io(window.location.href);
   } else {
-    socket = io("d.teenysong.com:50005");
+    //socket = io("d.teenysong.com:3050");
+    socket = io();
   }
 
   var debug = true;
