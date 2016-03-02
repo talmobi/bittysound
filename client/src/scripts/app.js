@@ -49,7 +49,12 @@ function widgets_clear () {
 };
 
 function get_track_id (track) {
-  return track.slice( track.lastIndexOf('/') + 1)
+  console.log(track);
+  if (track.lastIndexOf('/')) {
+    return track.slice( track.lastIndexOf('/') + 1);
+  } else {
+    return track;
+  }
 };
 
 function load_widget_track (track) {
@@ -73,6 +78,9 @@ function load_widget_track (track) {
   iframeEl.show_playcount = false;
   iframeEl.show_user = false;
   iframeEl.show_track = false;
+  iframeEl.__id = track_id;
+  iframeEl.__track = track;
+  iframeEl.__ready = false;
   divEl.appendChild(iframeEl);
 
   var w = SC.Widget(iframeEl);
@@ -83,14 +91,17 @@ function load_widget_track (track) {
     var icon = __els[track_id];
     icon.removeClass("icon-pause icon-spin3 animate-spin");
     icon.addClass("icon-play");
+    iframeEl.__ready = true;
+    w.__ready = true;
   });
 
   w.bind(SC.Widget.Events.FINISH, function () {
     console.log("widget onFinish called");
   });
 
-  iframeEl.__id = track_id;
   w.__id = track_id;
+  w.__track = track;
+
 
   console.log("widget loaded, uri: " + src);
 };
@@ -726,4 +737,57 @@ function init () {
 
   __initialized = true;
   console.log("app initialized");
+
+  // query url auto search
+  var href = window.location.href;
+  var kv = href.slice( href.indexOf('?') + 1 ).split('&');
+  var queryString = {};
+  for (var i = 0; i < kv.length; i++) {
+    var s = kv[i].split('=');
+    var k = s[0];
+    var v = s[1];
+    queryString[k] = v;
+  };
+  console.log(queryString);
+
+  var queryPlay = false;
+
+  var querySearch = function () {
+    if (!query_search_called) {
+      query_search_called = !query_search_called;
+      console.log(" >>>>>>>>> GOT FOCUS <<<<<<<<<<<<<");
+      if (queryString.search.length > 2) {
+        search(queryString.search);
+        if (queryString.play >= 0) {
+          var divEl = document.getElementById('hidden-area-id');
+          var interval = null;
+          interval = setInterval(function () {
+            console.log(">interval< " + queryString.play);
+
+            var el = document.getElementById('track' + queryString.play);
+            console.log(el);
+            var $el = $(el);
+
+            if ($el.hasClass('icon-play') && !$el.hasClass('animate-spin') && !queryPlay) {
+              queryPlay = true;
+              setTimeout(function () {
+                $el.click();
+                console.log("QUERY PLAY: " + queryString.play);
+              }, 200);
+              clearInterval(interval);
+            }
+          }, 400);
+        }
+      }
+
+    }
+  };
+
+  var query_search_called = false;
+  if (!document.hasFocus()) {
+    window.addEventListener('focus', querySearch);
+  } else {
+    querySearch();
+  }
 }
+
