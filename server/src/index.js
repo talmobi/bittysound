@@ -52,11 +52,22 @@ var ps = require('./progress_server');
 if (db) {
   console.log("connected to databse");
 
-
   // configure sockets
   var sockets = [];
   io.on('connection', function (socket) {
-    var address = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+    var xff = socket.handshake.headers['x-forwarded-for'];
+    var handshake = socket.handshake.address;
+    var address = xff || handshake;
+
+    //console.log(socket);
+
+    console.log("x-forwarded-for: " + xff);
+    console.log("handshake: " + handshake);
+
+    //console.log(socket.client.Client.conn);
+    //socket.client.Client.conn.socket.remoteAddress = xff;
+    //socket.remoteAddress = xff;
+
     console.log(">> a user connected ["+address+"]");
     sockets.push(socket);
 

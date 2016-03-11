@@ -508,7 +508,7 @@ a:hover {
   top: 0;
   width: 1px;
   height: 1px;
-  display: block;
+  display: none;
 }
 
 .icon-export {

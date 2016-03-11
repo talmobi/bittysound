@@ -169,7 +169,13 @@ function init () {
 
   /* Setup socket.io to listen for live progress on a download
    * */
-  socket = io();
+  if (ENV == 'dev') {
+    socket = io();
+  } else {
+    var wsurl = "d.teenysong.com:3050";
+    socket = io(wsurl);
+  }
+
   setTimeout(function () {
     if (socket) {
       socket.emit('stats', {
