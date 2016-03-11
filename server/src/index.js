@@ -60,9 +60,11 @@ if (db) {
     console.log(">> a user connected ["+address+"]");
     sockets.push(socket);
 
+    // send hello message
+    socket.emit('hello', "hello, this is teenysong, welcome! :D");
+
     socket.on('download', function (data) {
       var trackId = data.trackId;
-      console.log("progress listener added to: " + trackId);
       ps.add(trackId, socket);
 
       var Stat = new StatMessage({

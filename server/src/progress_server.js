@@ -1,33 +1,37 @@
 var tracks = {};
-var MAX_UPDATES_PER_SECOND_PER_TRACK = 1;
+var MAX_UPDATES_PER_SECOND_PER_TRACK = 10;
 var delay = 1000 / MAX_UPDATES_PER_SECOND_PER_TRACK;
 
 // adds a user socket to listen for progress updates on a given track
 function add (trackId, socket) {
-  if (!tracks[trackId]) {
-    tracks[trackId] = [];
-  }
+  console.log("progress listener ADDED to: " + trackId);
+  tracks[trackId] = tracks[trackId] || [];
   tracks[trackId].push(socket);
 };
 
 // used by server while downloading track from sound cloud
 // to update the status of the download to the user
 function update (trackId, percent) {
-  percent = percent | 0;
+  percent = Math.floor(percent);
+  //console.log("ps update: %s, %s", trackId, percent);
+
   if (percent <= 1) {
+    console.log("percent is below 1");
     return;
   }
   //console.log("updating:" + trackId);
   var sockets = tracks[trackId];
   var now = Date.now();
 
-  if (!sockets)
+  if (!sockets) {
+    console.log("sockets are falsy");
     return;
+  }
 
   // limit the updates
-  var lastTime = sockets.lastTime;
-  var lastPercent = sockets.lastPercent;
-  if (lastPercent !== percent && (!lastTime || now > lastTime + delay)) {
+  var lastTime = sockets.lastTime || 1000;
+  var lastPercent = sockets.lastPercent || null;
+  if (lastPercent != percent && (now > (lastTime + delay))) {
     sockets.lastTime = now;
     sockets.lastPercent = percent;
     //console.log("percent: " + percent);
@@ -35,6 +39,7 @@ function update (trackId, percent) {
     // update users listening for progress updates
     if (sockets) {
       for (var i = 0; i < sockets.length; i++) {
+        console.log("ps sending progress: " + percent);
         var socket = sockets[i];
         socket.emit('progress', {
           trackId: trackId,
@@ -42,7 +47,9 @@ function update (trackId, percent) {
         });
       };
     }
-  } 
+  } else {
+    //console.log("ps failed to send progress: " + percent);
+  }
 };
 
 // used by server when a track has completed downloading

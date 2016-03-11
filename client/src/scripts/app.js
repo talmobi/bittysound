@@ -169,25 +169,18 @@ function init () {
 
   /* Setup socket.io to listen for live progress on a download
    * */
-  var socket = null;
-  if (ENV == 'dev') {
-    socket = io(window.location.href);
-  } else {
-    if (ENV == 'production') {
-      socket = io("d.teenysong.com:3050");
-    } else {
-      socket = io();
+  socket = io();
+  setTimeout(function () {
+    if (socket) {
+      socket.emit('stats', {
+        type: "device: " + (isMobile ? 'mobile' : 'pc')
+      });
     }
+  }, 300);
 
-
-    setTimeout(function () {
-      if (socket) {
-        socket.emit('stats', {
-          type: "device: " + (isMobile ? 'mobile' : 'pc')
-        });
-      }
-    }, 300);
-  }
+  socket.on('hello', function (data) {
+    console.log("hello from server: " + data);
+  });
 
   var debug = true;
   var lastSound = null;
@@ -228,12 +221,15 @@ function init () {
     if (now > elHrefDownload.pressTime + pressDelay) {
       elHrefDownload.pressTime = now;
       console.log("triggering download");
-      setProgress(1);
+      setProgress(3); // show progress bar
       // trigger download
       // socket.io listen for live progress updates on the track download
-      socket.emit('download', {
-        trackId: selected_track_id
-      });
+      console.log("emitting download: " + selected_track_id);
+      setTimeout(function () {
+        socket.emit('download', {
+          trackId: selected_track_id
+        });
+      }, 100);
     } else {
       // dont trigger the download
       console.log("download already in progress, please wait");
@@ -266,6 +262,7 @@ function init () {
   /* Setup socket.io to listen for live progress on a download
    * */
   socket.on('progress', function (data) {
+    //console.log("Received progress from server: %s", data.percent);
     var trackId = data.trackId;
     var percent = data.percent;
     setProgress(percent);
@@ -751,8 +748,8 @@ function init () {
   console.log("app initialized");
 
   // query url auto search
-  var href = window.location.href;
-  var kv = href.slice( href.indexOf('?') + 1 ).split('&');
+  var href = window.location.search.substring(1);
+  var kv = href.split('&');
   var queryString = {};
   for (var i = 0; i < kv.length; i++) {
     var s = kv[i].split('=');
@@ -760,11 +757,14 @@ function init () {
     var v = s[1];
     queryString[k] = v;
   };
-  console.log(queryString);
+  console.log("queryString: " + queryString.search);
 
   var queryPlay = false;
 
   var querySearch = function () {
+    if (!queryString.search)
+      return;
+
     if (!query_search_called) {
       query_search_called = !query_search_called;
       console.log(" >>>>>>>>> GOT FOCUS <<<<<<<<<<<<<");

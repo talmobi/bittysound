@@ -129,7 +129,7 @@ module.exports = function (app) {
       file += data.toString('binary');
       var length = (file.length);
       var percent = (length / contentLength) * 100;
-      ps.update(trackId, (percent) | 0);
+      ps.update(trackId, percent);
     }).on('end', function () {
       ps.clear(trackId);
       console.log("filesize: " + file.length / (KB_IN_BYTES) + " MB");
