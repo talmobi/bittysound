@@ -7,6 +7,7 @@ var template_uri = "https://api.soundcloud.com";
 //var WIDGET = SC.Widget('sc-widget');
 
 var __els = {};
+var clipboard = null;
 
 var widgets = {};
 var current_widget = null;
@@ -142,8 +143,8 @@ function init () {
 
   var ENV = 'dev';
 
-  if (window.location.host.indexOf('local') == -1 &&
-      window.location.host.indexOf('192.168') == -1) {
+  if (window.location.host.indexOf('local') < 0 &&
+      window.location.host.indexOf('192.168') < 0) {
     ENV = 'production';
   };
 
@@ -172,8 +173,11 @@ function init () {
   if (ENV == 'dev') {
     socket = io(window.location.href);
   } else {
-    //socket = io("d.teenysong.com:3050");
-    socket = io();
+    if (ENV == 'production') {
+      socket = io("d.teenysong.com:3050");
+    } else {
+      socket = io();
+    }
 
 
     setTimeout(function () {
@@ -453,6 +457,8 @@ function init () {
       // add query param 'title' for custom default name
       track_url += "?title=" + shortTitle;
 
+      var textToCopy = (host + '/?search='+ lastSearch.replaceAll(' ', '+') +'&play=' + i);
+
       var ani = animation || 'fadeIn';
       // create list item (track)
       var $el = $(
@@ -462,7 +468,7 @@ function init () {
             t_title +
           '</span>' +
           '<div class="right">' +
-            '<button class="icon-export"></button>' +
+            '<button class="icon-export" data-clipboard-text="'+textToCopy+'" ></button>' +
             //'<form style="display: inline;" method="get" action="'+ track_url +'">' + 
             //'<a href="' + track_url + '">' +
             '<button type="submit" class="icon-download"></button>' +
@@ -501,8 +507,14 @@ function init () {
           log("click: " + e.track.uri);
           log(e.track);
 
+          var textToCopy = (host + '/?search='+ lastSearch.replaceAll(' ', '+') +'&play=' + self.trackNumber);
           //showNotice(host + '/?search='+ lastSearch +'&track=' + self.trackId, 'info');
-          showNotice(host + '/?search='+ lastSearch.replaceAll(' ', '+') +'&play=' + self.trackNumber, 'info');
+
+          window.location.href = textToCopy;
+
+          ii_export['data-clipboard-text'] = textToCopy;
+
+          //showNotice("link copied to clipboard!");
 
           return false;
         })
@@ -764,7 +776,8 @@ function init () {
           interval = setInterval(function () {
             console.log(">interval< " + queryString.play);
 
-            var el = document.getElementById('track' + queryString.play);
+            var num = queryString.play - 1;
+            var el = document.getElementById('track' + num);
             console.log(el);
             var $el = $(el);
 

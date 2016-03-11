@@ -510,3 +510,7 @@ a:hover {
   height: 1px;
   display: block;
 }
+
+.icon-export {
+  display: none;
+};
